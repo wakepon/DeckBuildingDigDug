@@ -5,6 +5,9 @@ import { InputManager } from './InputManager';
 import { Player } from './Player';
 import { BulletManager } from './BulletManager';
 import { ParticleManager } from './ParticleManager';
+import { EnemyManager } from './EnemyManager';
+import { GemManager } from './GemManager';
+import { UI } from './UI';
 
 export class Game {
   private app: Application;
@@ -14,6 +17,9 @@ export class Game {
   private player!: Player;
   private bulletManager!: BulletManager;
   private particleManager!: ParticleManager;
+  private enemyManager!: EnemyManager;
+  private gemManager!: GemManager;
+  private ui!: UI;
 
   constructor() {
     this.app = new Application();
@@ -56,18 +62,50 @@ export class Game {
     // Initialize particle manager
     this.particleManager = new ParticleManager();
 
-    // Connect bullet manager to particle manager for destruction effects
+    // Initialize enemy manager
+    this.enemyManager = new EnemyManager();
+
+    // Initialize gem manager
+    this.gemManager = new GemManager();
+
+    // Initialize UI
+    this.ui = new UI();
+
+    // Connect managers
+    this.bulletManager.setEnemyManager(this.enemyManager);
+
+    // Wall destruction -> particles + enemy spawn
     this.bulletManager.setOnWallDestroyed((x, y, color) => {
       this.particleManager.emit(x, y, color);
+      this.enemyManager.onWallDestroyed(x, y);
+    });
+
+    // Enemy death -> gem spawn + death particles
+    this.enemyManager.setOnEnemyDeath((x, y) => {
+      this.gemManager.spawnGem(x, y);
+      this.particleManager.emit(x, y, 0xff4444); // Red particles for enemy death
+    });
+
+    // Enemy damages player
+    this.enemyManager.setOnPlayerDamage((damage) => {
+      this.player.takeDamage(damage);
+    });
+
+    // Gem collected -> add exp
+    this.gemManager.setOnExpGained((exp) => {
+      this.player.addExp(exp);
     });
 
     // Build scene hierarchy
     this.gameContainer.addChild(this.wallManager.container);
+    this.gameContainer.addChild(this.gemManager.container);
     this.gameContainer.addChild(this.bulletManager.container);
+    this.gameContainer.addChild(this.enemyManager.container);
     this.gameContainer.addChild(this.player.container);
     this.gameContainer.addChild(this.particleManager.container);
 
     this.app.stage.addChild(this.gameContainer);
+    this.app.stage.addChild(this.ui.container); // UI is on top, not affected by camera
 
     // Start game loop
     this.app.ticker.add(this.update.bind(this));
@@ -84,8 +122,14 @@ export class Game {
     const cameraY = this.gameContainer.y;
 
     this.bulletManager.update(deltaTime, cameraX, cameraY);
+    this.enemyManager.update(deltaTime, this.player.x, this.player.y);
+    this.gemManager.update(deltaTime, this.player.x, this.player.y);
     this.particleManager.update(deltaTime);
     this.wallManager.update();
+
+    // Update UI
+    this.ui.updateHP(this.player.hp, this.player.maxHp);
+    this.ui.updateEXP(this.player.exp);
 
     // Update camera to follow player
     this.updateCamera();
