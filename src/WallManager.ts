@@ -88,6 +88,12 @@ export class WallManager {
     return this.walls[y][x];
   }
 
+  public getWallColor(x: number, y: number): number | null {
+    const wall = this.getWall(x, y);
+    if (!wall) return null;
+    return WALL_COLORS[wall.hp] || WALL_COLORS[1];
+  }
+
   public damageWall(x: number, y: number, damage: number): boolean {
     const wall = this.getWall(x, y);
     if (!wall) return false;
