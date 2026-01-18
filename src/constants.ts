@@ -41,3 +41,36 @@ export const PARTICLE_SPEED_MAX = 300;
 export const PARTICLE_LIFETIME = 0.5; // seconds
 export const PARTICLE_SIZE_MIN = 4;
 export const PARTICLE_SIZE_MAX = 10;
+
+// Player combat settings
+export const PLAYER_MAX_HP = 100;
+export const PLAYER_INVINCIBILITY_TIME = 0.5; // seconds
+
+// Enemy settings
+export const ENEMY_SIZE = 24;
+export const ENEMY_SPEED = 80; // pixels per second
+export const ENEMY_HP = 3;
+export const ENEMY_COLOR = 0xff4444;
+export const ENEMY_DAMAGE = 1;
+export const ENEMY_SPAWN_CHANCE = 0.20; // 20% chance on wall break
+
+// Spawner settings (infinite spawn point)
+export const SPAWNER_CHANCE = 0.05; // 5% chance on wall break
+export const SPAWNER_INTERVAL = 2.0; // seconds between spawns
+export const SPAWNER_MAX_ENEMIES = 5;
+export const SPAWNER_DISABLE_RANGE = 60; // pixels - player must get close to disable
+export const SPAWNER_SIZE = 30;
+export const SPAWNER_COLOR = 0x8800ff;
+
+// Gem settings
+export const GEM_SIZE = 12;
+export const GEM_COLOR = 0x00ffff;
+export const GEM_ATTRACT_RANGE = 100; // pixels
+export const GEM_ATTRACT_SPEED = 300; // pixels per second
+export const GEM_COLLECT_RANGE = 20; // pixels
+export const GEM_EXP_VALUE = 1;
+
+// UI settings
+export const UI_BAR_WIDTH = 200;
+export const UI_BAR_HEIGHT = 16;
+export const UI_PADDING = 10;

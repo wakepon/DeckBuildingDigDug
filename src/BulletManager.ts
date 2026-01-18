@@ -3,11 +3,13 @@ import { Bullet } from './Bullet';
 import { WallManager } from './WallManager';
 import { InputManager } from './InputManager';
 import { Player } from './Player';
+import { EnemyManager } from './EnemyManager';
 import {
   FIRE_RATE,
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
+  BULLET_SIZE,
 } from './constants';
 
 export class BulletManager {
@@ -16,6 +18,7 @@ export class BulletManager {
   private wallManager: WallManager;
   private inputManager: InputManager;
   private player: Player;
+  private enemyManager: EnemyManager | null = null;
   private fireCooldown: number = 0;
   private onWallDestroyed: ((x: number, y: number, color: number) => void) | null = null;
 
@@ -28,6 +31,10 @@ export class BulletManager {
     this.inputManager = inputManager;
     this.player = player;
     this.container = new Container();
+  }
+
+  setEnemyManager(enemyManager: EnemyManager): void {
+    this.enemyManager = enemyManager;
   }
 
   setOnWallDestroyed(callback: (x: number, y: number, color: number) => void): void {
@@ -47,6 +54,20 @@ export class BulletManager {
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
       bullet.update(deltaTime);
+
+      // Check enemy collision first
+      if (this.enemyManager) {
+        const hitEnemy = this.enemyManager.damageEnemyAt(
+          bullet.x,
+          bullet.y,
+          BULLET_SIZE / 2,
+          1
+        );
+        if (hitEnemy) {
+          this.removeBullet(i);
+          continue;
+        }
+      }
 
       // Check wall collision
       const gridX = Math.floor(bullet.x / TILE_SIZE);
