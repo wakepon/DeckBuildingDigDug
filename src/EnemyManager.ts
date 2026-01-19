@@ -1,5 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import { Enemy } from './Enemy';
+import { EliteEnemy } from './EliteEnemy';
+import { TreasureChest } from './TreasureChest';
 import {
   ENEMY_SPAWN_CHANCE,
   SPAWNER_CHANCE,
@@ -11,6 +13,7 @@ import {
   ENEMY_SIZE,
   PLAYER_SIZE,
   ENEMY_DAMAGE,
+  ELITE_SPAWN_CHANCE,
 } from './constants';
 
 interface Spawner {
@@ -26,9 +29,13 @@ interface Spawner {
 export class EnemyManager {
   public container: Container;
   private enemies: Enemy[] = [];
+  private eliteEnemies: EliteEnemy[] = [];
+  private treasureChests: TreasureChest[] = [];
   private spawners: Spawner[] = [];
   private nextSpawnerId: number = 0;
   private onEnemyDeath: ((x: number, y: number) => void) | null = null;
+  private onEliteDeath: ((x: number, y: number) => void) | null = null;
+  private onChestCollected: ((upgradeCount: number) => void) | null = null;
   private onPlayerDamage: ((damage: number) => void) | null = null;
   private enemyHP: number = 3;
   private enemySpawnChance: number = ENEMY_SPAWN_CHANCE;
@@ -49,12 +56,26 @@ export class EnemyManager {
     this.onEnemyDeath = callback;
   }
 
+  setOnEliteDeath(callback: (x: number, y: number) => void): void {
+    this.onEliteDeath = callback;
+  }
+
+  setOnChestCollected(callback: (upgradeCount: number) => void): void {
+    this.onChestCollected = callback;
+  }
+
   setOnPlayerDamage(callback: (damage: number) => void): void {
     this.onPlayerDamage = callback;
   }
 
   onWallDestroyed(x: number, y: number): void {
-    // Check for spawner first (5% chance)
+    // Check for elite enemy first (2% chance)
+    if (Math.random() < ELITE_SPAWN_CHANCE) {
+      this.spawnEliteEnemy(x, y);
+      return;
+    }
+
+    // Check for spawner (5% chance)
     if (Math.random() < SPAWNER_CHANCE) {
       this.createSpawner(x, y);
       return;
@@ -122,6 +143,18 @@ export class EnemyManager {
     const enemy = new Enemy(x, y, spawnerId, this.enemyHP);
     this.enemies.push(enemy);
     this.container.addChild(enemy.graphics);
+  }
+
+  spawnEliteEnemy(x: number, y: number): void {
+    const elite = new EliteEnemy(x, y, this.enemyHP);
+    this.eliteEnemies.push(elite);
+    this.container.addChild(elite.graphics);
+  }
+
+  private spawnTreasureChest(x: number, y: number): void {
+    const chest = new TreasureChest(x, y);
+    this.treasureChests.push(chest);
+    this.container.addChild(chest.graphics);
   }
 
   private getSpawnerById(id: number): Spawner | undefined {
@@ -195,13 +228,65 @@ export class EnemyManager {
         this.onPlayerDamage(ENEMY_DAMAGE);
       }
     }
+
+    // Update elite enemies
+    for (let i = this.eliteEnemies.length - 1; i >= 0; i--) {
+      const elite = this.eliteEnemies[i];
+
+      if (!elite.active) {
+        // Spawn treasure chest on death
+        this.spawnTreasureChest(elite.x, elite.y);
+
+        if (this.onEliteDeath) {
+          this.onEliteDeath(elite.x, elite.y);
+        }
+        this.container.removeChild(elite.graphics);
+        elite.destroy();
+        this.eliteEnemies.splice(i, 1);
+        continue;
+      }
+
+      elite.update(deltaTime, playerX, playerY);
+
+      // Check collision with player
+      const dx = playerX - elite.x;
+      const dy = playerY - elite.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const collisionDist = (PLAYER_SIZE / 2) + elite.radius;
+
+      if (dist < collisionDist && this.onPlayerDamage) {
+        this.onPlayerDamage(ENEMY_DAMAGE * 2); // Elite does double damage
+      }
+    }
+
+    // Update treasure chests
+    for (let i = this.treasureChests.length - 1; i >= 0; i--) {
+      const chest = this.treasureChests[i];
+
+      chest.update(deltaTime);
+
+      // Check collision with player
+      if (chest.checkCollision(playerX, playerY)) {
+        if (this.onChestCollected) {
+          this.onChestCollected(chest.upgradeCount);
+        }
+        this.container.removeChild(chest.graphics);
+        chest.destroy();
+        this.treasureChests.splice(i, 1);
+      }
+    }
   }
 
   getEnemies(): Enemy[] {
     return this.enemies;
   }
 
+  getEliteEnemies(): EliteEnemy[] {
+    return this.eliteEnemies;
+  }
+
   damageEnemyAt(x: number, y: number, radius: number, damage: number): boolean {
+    // Check normal enemies
     for (const enemy of this.enemies) {
       if (!enemy.active) continue;
 
@@ -214,6 +299,21 @@ export class EnemyManager {
         return true;
       }
     }
+
+    // Check elite enemies
+    for (const elite of this.eliteEnemies) {
+      if (!elite.active) continue;
+
+      const dx = x - elite.x;
+      const dy = y - elite.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < radius + elite.radius) {
+        elite.takeDamage(damage);
+        return true;
+      }
+    }
+
     return false;
   }
 
@@ -223,6 +323,18 @@ export class EnemyManager {
       enemy.destroy();
     }
     this.enemies = [];
+
+    for (const elite of this.eliteEnemies) {
+      this.container.removeChild(elite.graphics);
+      elite.destroy();
+    }
+    this.eliteEnemies = [];
+
+    for (const chest of this.treasureChests) {
+      this.container.removeChild(chest.graphics);
+      chest.destroy();
+    }
+    this.treasureChests = [];
 
     for (const spawner of this.spawners) {
       this.container.removeChild(spawner.graphics);

@@ -1,6 +1,6 @@
+import { PlayerStats } from './PlayerStats';
 import {
   OXYGEN_MAX,
-  OXYGEN_DRAIN_RATE,
   OXYGEN_WARNING_THRESHOLD,
   OXYGEN_DAMAGE_RATE,
   PLAYER_MAX_HP,
@@ -9,11 +9,13 @@ import {
 export class OxygenController {
   private _oxygen: number;
   private _maxOxygen: number;
+  private playerStats: PlayerStats;
   private onDamage: ((damage: number) => void) | null = null;
   private onWarning: ((isWarning: boolean) => void) | null = null;
   private onDepleted: ((isDepleted: boolean) => void) | null = null;
 
-  constructor() {
+  constructor(playerStats: PlayerStats) {
+    this.playerStats = playerStats;
     this._maxOxygen = OXYGEN_MAX;
     this._oxygen = this._maxOxygen;
   }
@@ -31,8 +33,8 @@ export class OxygenController {
   }
 
   update(deltaTime: number): void {
-    // Drain oxygen
-    this._oxygen -= OXYGEN_DRAIN_RATE * deltaTime;
+    // Drain oxygen (using player stats for drain rate)
+    this._oxygen -= this.playerStats.oxygenDrainRate * deltaTime;
 
     if (this._oxygen < 0) {
       this._oxygen = 0;

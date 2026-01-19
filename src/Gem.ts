@@ -16,10 +16,12 @@ export class Gem {
 
   private floatOffset: number;
   private floatSpeed: number;
+  private attractRange: number;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, attractRange: number = GEM_ATTRACT_RANGE) {
     this.x = x;
     this.y = y;
+    this.attractRange = attractRange;
     this.floatOffset = Math.random() * Math.PI * 2;
     this.floatSpeed = 3 + Math.random() * 2;
 
@@ -58,6 +60,11 @@ export class Gem {
     this.graphics.y = this.y;
   }
 
+  // Update attract range (for when player upgrades)
+  setAttractRange(range: number): void {
+    this.attractRange = range;
+  }
+
   update(deltaTime: number, playerX: number, playerY: number): boolean {
     const dx = playerX - this.x;
     const dy = playerY - this.y;
@@ -70,9 +77,9 @@ export class Gem {
       return true;
     }
 
-    // Attract towards player if in range
-    if (dist < GEM_ATTRACT_RANGE) {
-      const speed = GEM_ATTRACT_SPEED * (1 - dist / GEM_ATTRACT_RANGE);
+    // Attract towards player if in range (using dynamic attract range)
+    if (dist < this.attractRange) {
+      const speed = GEM_ATTRACT_SPEED * (1 - dist / this.attractRange);
       this.x += (dx / dist) * speed * deltaTime;
       this.y += (dy / dist) * speed * deltaTime;
     }

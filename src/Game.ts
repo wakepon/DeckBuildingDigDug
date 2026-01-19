@@ -1,5 +1,5 @@
 import { Application, Container } from 'pixi.js';
-import { SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT, TILE_SIZE, PLAYER_SPAWN_CENTER_X, PLAYER_SPAWN_CENTER_Y } from './constants';
+import { SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT, TILE_SIZE, PLAYER_SPAWN_CENTER_X, PLAYER_SPAWN_CENTER_Y, ELITE_COLOR } from './constants';
 import { WallManager } from './WallManager';
 import { InputManager } from './InputManager';
 import { Player } from './Player';
@@ -14,6 +14,9 @@ import { FloorManager } from './FloorManager';
 import { OxygenTankManager } from './OxygenTankManager';
 import { Stairs } from './Stairs';
 import { TransitionEffect } from './TransitionEffect';
+import { PlayerStats } from './PlayerStats';
+import { UpgradeSystem } from './UpgradeSystem';
+import { StatsDisplay } from './StatsDisplay';
 
 export class Game {
   private app: Application;
@@ -32,7 +35,11 @@ export class Game {
   private oxygenTankManager!: OxygenTankManager;
   private stairs!: Stairs;
   private transitionEffect!: TransitionEffect;
+  private playerStats!: PlayerStats;
+  private upgradeSystem!: UpgradeSystem;
+  private statsDisplay!: StatsDisplay;
   private isTransitioning: boolean = false;
+  private isPaused: boolean = false;
 
   constructor() {
     this.app = new Application();
@@ -59,6 +66,9 @@ export class Game {
     this.inputManager = new InputManager();
     this.inputManager.setCanvas(this.app.canvas);
 
+    // Initialize player stats (must be before other systems that use it)
+    this.playerStats = new PlayerStats();
+
     // Initialize floor manager
     this.floorManager = new FloorManager();
 
@@ -69,14 +79,15 @@ export class Game {
     const stairsPos = this.wallManager.stairsPosition;
     this.stairs = new Stairs(stairsPos.x, stairsPos.y);
 
-    // Initialize player
-    this.player = new Player(this.inputManager, this.wallManager);
+    // Initialize player with stats
+    this.player = new Player(this.inputManager, this.wallManager, this.playerStats);
 
-    // Initialize bullet manager
+    // Initialize bullet manager with stats
     this.bulletManager = new BulletManager(
       this.wallManager,
       this.inputManager,
-      this.player
+      this.player,
+      this.playerStats
     );
 
     // Initialize particle manager
@@ -87,21 +98,27 @@ export class Game {
     this.enemyManager.setEnemyHP(this.floorManager.getEnemyHP());
     this.enemyManager.setEnemySpawnChance(this.floorManager.getEnemySpawnChance());
 
-    // Initialize gem manager with scaled EXP
-    this.gemManager = new GemManager();
+    // Initialize gem manager with stats and scaled EXP
+    this.gemManager = new GemManager(this.playerStats);
     this.gemManager.setExpValue(this.floorManager.getGemExpValue());
 
     // Initialize oxygen tank manager
     this.oxygenTankManager = new OxygenTankManager();
 
-    // Initialize oxygen controller
-    this.oxygenController = new OxygenController();
+    // Initialize oxygen controller with stats
+    this.oxygenController = new OxygenController(this.playerStats);
 
     // Initialize overlay effect
     this.overlayEffect = new OverlayEffect();
 
     // Initialize transition effect
     this.transitionEffect = new TransitionEffect();
+
+    // Initialize upgrade system
+    this.upgradeSystem = new UpgradeSystem(this.playerStats);
+
+    // Initialize stats display
+    this.statsDisplay = new StatsDisplay(this.playerStats);
 
     // Initialize UI
     this.ui = new UI();
@@ -132,14 +149,46 @@ export class Game {
       this.particleManager.emit(x, y, 0xff4444); // Red particles for enemy death
     });
 
+    // Elite enemy death -> gems + purple particles
+    this.enemyManager.setOnEliteDeath((x, y) => {
+      // Spawn multiple gems for elite
+      for (let i = 0; i < 5; i++) {
+        const offsetX = (Math.random() - 0.5) * 40;
+        const offsetY = (Math.random() - 0.5) * 40;
+        this.gemManager.spawnGem(x + offsetX, y + offsetY);
+      }
+      this.particleManager.emit(x, y, ELITE_COLOR); // Purple particles
+    });
+
+    // Treasure chest collected -> trigger upgrades
+    this.enemyManager.setOnChestCollected((upgradeCount) => {
+      this.particleManager.emit(this.player.x, this.player.y, 0xffd700); // Gold particles
+      this.showUpgradeSelection(upgradeCount);
+    });
+
     // Enemy damages player
     this.enemyManager.setOnPlayerDamage((damage) => {
       this.player.takeDamage(damage);
     });
 
-    // Gem collected -> add exp
+    // Gem collected -> add exp and check level up
     this.gemManager.setOnExpGained((exp) => {
-      this.player.addExp(exp);
+      const leveledUp = this.playerStats.addExp(exp);
+      if (leveledUp) {
+        this.showUpgradeSelection(1);
+      }
+    });
+
+    // Upgrade selected callback
+    this.upgradeSystem.setOnUpgradeSelected((type) => {
+      // Handle special upgrade effects
+      if (type === 'maxHp') {
+        // Heal the amount of HP gained
+        const oldMaxHp = this.playerStats.maxHp - 20; // UPGRADE_MAX_HP
+        this.player.onMaxHpIncrease(oldMaxHp);
+      }
+      // Update stats display
+      this.statsDisplay.updateDisplay();
     });
 
     // Oxygen tank collected -> restore oxygen
@@ -177,10 +226,17 @@ export class Game {
     this.app.stage.addChild(this.gameContainer);
     this.app.stage.addChild(this.overlayEffect.container); // Overlay on top of game
     this.app.stage.addChild(this.ui.container); // UI is on top of everything
+    this.app.stage.addChild(this.statsDisplay.container); // Stats display
     this.app.stage.addChild(this.transitionEffect.graphics); // Transition on top of all
+    this.app.stage.addChild(this.upgradeSystem.container); // Upgrade UI on very top
 
     // Start game loop
     this.app.ticker.add(this.update.bind(this));
+  }
+
+  private showUpgradeSelection(count: number): void {
+    this.isPaused = true;
+    this.upgradeSystem.show(count);
   }
 
   private update(): void {
@@ -189,8 +245,13 @@ export class Game {
     // Update transition effect
     this.transitionEffect.update(deltaTime);
 
-    // Don't update game during transition
-    if (this.isTransitioning) return;
+    // Check if upgrade selection is done
+    if (this.isPaused && !this.upgradeSystem.active) {
+      this.isPaused = false;
+    }
+
+    // Don't update game during transition or upgrade selection
+    if (this.isTransitioning || this.isPaused) return;
 
     // Update game components
     this.player.update(deltaTime);
@@ -222,7 +283,7 @@ export class Game {
     this.ui.update(deltaTime);
     this.ui.updateOxygen(this.oxygenController.oxygen, this.oxygenController.maxOxygen);
     this.ui.updateHP(this.player.hp, this.player.maxHp);
-    this.ui.updateEXP(this.player.exp);
+    this.ui.updateEXP(this.playerStats.exp, this.playerStats.level, this.playerStats.getRequiredExp());
 
     // Update camera to follow player
     this.updateCamera();

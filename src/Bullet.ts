@@ -8,10 +8,21 @@ export class Bullet {
   public vx: number;
   public vy: number;
   public active: boolean = true;
+  public penetrationRemaining: number;
+  private size: number;
 
-  constructor(x: number, y: number, dirX: number, dirY: number) {
+  constructor(
+    x: number,
+    y: number,
+    dirX: number,
+    dirY: number,
+    size: number = BULLET_SIZE,
+    penetration: number = 0
+  ) {
     this.x = x;
     this.y = y;
+    this.size = size;
+    this.penetrationRemaining = penetration;
 
     // Normalize direction and apply speed
     const length = Math.sqrt(dirX * dirX + dirY * dirY);
@@ -24,17 +35,25 @@ export class Bullet {
   }
 
   private draw(): void {
+    this.graphics.clear();
+
     // Main bullet
-    this.graphics.circle(0, 0, BULLET_SIZE / 2);
+    this.graphics.circle(0, 0, this.size / 2);
     this.graphics.fill(BULLET_COLOR);
 
     // Glow effect
-    this.graphics.circle(0, 0, BULLET_SIZE / 2 + 2);
+    this.graphics.circle(0, 0, this.size / 2 + 2);
     this.graphics.fill({ color: 0xffff88, alpha: 0.4 });
 
     // Core
-    this.graphics.circle(0, 0, BULLET_SIZE / 4);
+    this.graphics.circle(0, 0, this.size / 4);
     this.graphics.fill(0xffffff);
+
+    // Penetration indicator (orange ring if penetrating)
+    if (this.penetrationRemaining > 0) {
+      this.graphics.circle(0, 0, this.size / 2 + 4);
+      this.graphics.stroke({ width: 2, color: 0xffaa00, alpha: 0.6 });
+    }
   }
 
   private updatePosition(): void {

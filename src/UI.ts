@@ -232,20 +232,18 @@ export class UI {
     this.hpText.text = `HP: ${Math.ceil(current)}/${max}`;
   }
 
-  updateEXP(exp: number): void {
-    // Simple exp bar - fills up every 10 exp
-    const level = Math.floor(exp / 10);
-    const expInLevel = exp % 10;
-    const ratio = expInLevel / 10;
+  updateEXP(exp: number, level: number = 1, requiredExp: number = 10): void {
+    // Calculate progress towards next level
+    const ratio = exp / requiredExp;
 
     this.expBarFill.clear();
-    if (ratio > 0 || exp > 0) {
-      const width = (UI_BAR_WIDTH - 4) * (ratio === 0 && exp > 0 ? 1 : ratio);
-      this.expBarFill.roundRect(0, 0, Math.max(width, ratio > 0 ? width : 0), UI_BAR_HEIGHT - 8, 2);
+    if (ratio > 0) {
+      const width = (UI_BAR_WIDTH - 4) * Math.min(ratio, 1);
+      this.expBarFill.roundRect(0, 0, width, UI_BAR_HEIGHT - 8, 2);
       this.expBarFill.fill(0x00ffff);
     }
 
-    this.expText.text = `EXP: ${exp} (Lv.${level + 1})`;
+    this.expText.text = `Lv.${level} (${exp}/${requiredExp})`;
   }
 
   updateFloor(floor: number): void {

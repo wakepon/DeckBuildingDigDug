@@ -4,12 +4,11 @@ import { WallManager } from './WallManager';
 import { InputManager } from './InputManager';
 import { Player } from './Player';
 import { EnemyManager } from './EnemyManager';
+import { PlayerStats } from './PlayerStats';
 import {
-  FIRE_RATE,
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
-  BULLET_SIZE,
 } from './constants';
 
 export class BulletManager {
@@ -18,6 +17,7 @@ export class BulletManager {
   private wallManager: WallManager;
   private inputManager: InputManager;
   private player: Player;
+  private playerStats: PlayerStats;
   private enemyManager: EnemyManager | null = null;
   private fireCooldown: number = 0;
   private onWallDestroyed: ((x: number, y: number, color: number) => void) | null = null;
@@ -25,11 +25,13 @@ export class BulletManager {
   constructor(
     wallManager: WallManager,
     inputManager: InputManager,
-    player: Player
+    player: Player,
+    playerStats: PlayerStats
   ) {
     this.wallManager = wallManager;
     this.inputManager = inputManager;
     this.player = player;
+    this.playerStats = playerStats;
     this.container = new Container();
   }
 
@@ -42,12 +44,12 @@ export class BulletManager {
   }
 
   update(deltaTime: number, cameraX: number, cameraY: number): void {
-    // Handle firing
+    // Handle firing with dynamic fire rate from stats
     this.fireCooldown -= deltaTime;
 
     if (this.inputManager.isMouseDown && this.fireCooldown <= 0) {
       this.fire(cameraX, cameraY);
-      this.fireCooldown = FIRE_RATE;
+      this.fireCooldown = this.playerStats.fireRate;
     }
 
     // Update bullets
@@ -57,11 +59,13 @@ export class BulletManager {
 
       // Check enemy collision first
       if (this.enemyManager) {
+        const damage = this.playerStats.attackPower;
+        const bulletRadius = this.playerStats.bulletSize / 2;
         const hitEnemy = this.enemyManager.damageEnemyAt(
           bullet.x,
           bullet.y,
-          BULLET_SIZE / 2,
-          1
+          bulletRadius,
+          damage
         );
         if (hitEnemy) {
           this.removeBullet(i);
@@ -88,9 +92,13 @@ export class BulletManager {
           this.onWallDestroyed(centerX, centerY, wallColor);
         }
 
-        // Remove bullet
-        this.removeBullet(i);
-        continue;
+        // Check penetration
+        bullet.penetrationRemaining--;
+        if (bullet.penetrationRemaining < 0) {
+          // Remove bullet
+          this.removeBullet(i);
+          continue;
+        }
       }
 
       // Check out of bounds
@@ -116,7 +124,14 @@ export class BulletManager {
     // Don't fire if mouse is too close
     if (Math.abs(dirX) < 1 && Math.abs(dirY) < 1) return;
 
-    const bullet = new Bullet(this.player.x, this.player.y, dirX, dirY);
+    const bullet = new Bullet(
+      this.player.x,
+      this.player.y,
+      dirX,
+      dirY,
+      this.playerStats.bulletSize,
+      this.playerStats.penetrationCount
+    );
     this.bullets.push(bullet);
     this.container.addChild(bullet.graphics);
   }

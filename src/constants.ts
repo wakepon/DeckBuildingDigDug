@@ -100,3 +100,29 @@ export const FLOOR_GEM_EXP_SCALE = 0.3; // +30% exp per floor
 
 // Transition settings
 export const TRANSITION_DURATION = 0.5; // seconds for fade
+
+// Level-up settings
+export const EXP_PER_LEVEL_BASE = 10; // Required EXP = 10 × level
+export const UPGRADE_CHOICES = 3; // Number of upgrades to choose from
+
+// Upgrade values
+export const UPGRADE_ATTACK_POWER = 0.2; // +20%
+export const UPGRADE_ATTACK_SPEED = 0.15; // +15%
+export const UPGRADE_BULLET_SIZE = 0.25; // +25%
+export const UPGRADE_MOVE_SPEED = 0.1; // +10%
+export const UPGRADE_MAX_HP = 20; // +20 HP
+export const UPGRADE_OXYGEN_REDUCTION = 0.1; // -10%
+export const UPGRADE_PENETRATION = 2; // Penetrate 2 walls
+export const UPGRADE_GEM_ATTRACT = 0.5; // +50%
+
+// Elite enemy settings
+export const ELITE_SPAWN_CHANCE = 0.02; // 2% chance on wall break
+export const ELITE_HP_MULTIPLIER = 5;
+export const ELITE_SIZE_MULTIPLIER = 1.8;
+export const ELITE_COLOR = 0xff00ff; // Magenta
+
+// Treasure chest settings
+export const CHEST_SIZE = 28;
+export const CHEST_COLOR = 0xffd700; // Gold
+export const CHEST_MIN_UPGRADES = 1;
+export const CHEST_MAX_UPGRADES = 3;
