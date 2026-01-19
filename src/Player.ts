@@ -1,14 +1,13 @@
 import { Container, Graphics } from 'pixi.js';
 import { InputManager } from './InputManager';
 import { WallManager } from './WallManager';
+import { PlayerStats } from './PlayerStats';
 import {
   PLAYER_SIZE,
-  PLAYER_SPEED,
   PLAYER_COLOR,
   PLAYER_SPAWN_CENTER_X,
   PLAYER_SPAWN_CENTER_Y,
   TILE_SIZE,
-  PLAYER_MAX_HP,
   PLAYER_INVINCIBILITY_TIME,
 } from './constants';
 
@@ -17,24 +16,22 @@ export class Player {
   private graphics: Graphics;
   private inputManager: InputManager;
   private wallManager: WallManager;
+  private stats: PlayerStats;
 
   private _x: number;
   private _y: number;
   private _hp: number;
-  private _maxHp: number;
-  private _exp: number;
   private _invincibilityTime: number = 0;
 
-  constructor(inputManager: InputManager, wallManager: WallManager) {
+  constructor(inputManager: InputManager, wallManager: WallManager, stats: PlayerStats) {
     this.inputManager = inputManager;
     this.wallManager = wallManager;
+    this.stats = stats;
 
     // Start at center of spawn area
     this._x = (PLAYER_SPAWN_CENTER_X + 0.5) * TILE_SIZE;
     this._y = (PLAYER_SPAWN_CENTER_Y + 0.5) * TILE_SIZE;
-    this._hp = PLAYER_MAX_HP;
-    this._maxHp = PLAYER_MAX_HP;
-    this._exp = 0;
+    this._hp = this.stats.maxHp;
 
     this.container = new Container();
     this.graphics = new Graphics();
@@ -81,8 +78,9 @@ export class Player {
 
     if (direction.x === 0 && direction.y === 0) return;
 
-    const moveX = direction.x * PLAYER_SPEED * deltaTime;
-    const moveY = direction.y * PLAYER_SPEED * deltaTime;
+    // Use stats for move speed
+    const moveX = direction.x * this.stats.moveSpeed * deltaTime;
+    const moveY = direction.y * this.stats.moveSpeed * deltaTime;
 
     // Try to move, with collision detection
     this.tryMove(moveX, moveY);
@@ -156,8 +154,17 @@ export class Player {
     return false;
   }
 
-  addExp(amount: number): void {
-    this._exp += amount;
+  // Heal player, capped at max HP
+  heal(amount: number): void {
+    this._hp = Math.min(this.stats.maxHp, this._hp + amount);
+  }
+
+  // Called when max HP increases to optionally heal difference
+  onMaxHpIncrease(oldMaxHp: number): void {
+    const diff = this.stats.maxHp - oldMaxHp;
+    if (diff > 0) {
+      this.heal(diff);
+    }
   }
 
   get x(): number {
@@ -173,11 +180,7 @@ export class Player {
   }
 
   get maxHp(): number {
-    return this._maxHp;
-  }
-
-  get exp(): number {
-    return this._exp;
+    return this.stats.maxHp;
   }
 
   get isInvincible(): boolean {
@@ -190,5 +193,9 @@ export class Player {
     this._invincibilityTime = 0;
     this.updatePosition();
     this.draw();
+  }
+
+  resetHp(): void {
+    this._hp = this.stats.maxHp;
   }
 }
