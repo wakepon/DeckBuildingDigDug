@@ -145,6 +145,17 @@ export class Player {
     return false;
   }
 
+  // Slip damage ignores invincibility (e.g., oxygen depletion)
+  takeSlipDamage(amount: number): boolean {
+    this._hp -= amount;
+
+    if (this._hp <= 0) {
+      this._hp = 0;
+      return true; // Player died
+    }
+    return false;
+  }
+
   addExp(amount: number): void {
     this._exp += amount;
   }

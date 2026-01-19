@@ -74,3 +74,9 @@ export const GEM_EXP_VALUE = 1;
 export const UI_BAR_WIDTH = 200;
 export const UI_BAR_HEIGHT = 16;
 export const UI_PADDING = 10;
+
+// Oxygen settings
+export const OXYGEN_MAX = 60; // 60 seconds worth
+export const OXYGEN_DRAIN_RATE = 1; // per second
+export const OXYGEN_WARNING_THRESHOLD = 0.2; // 20%
+export const OXYGEN_DAMAGE_RATE = 0.03; // 3% of max HP per second when oxygen is 0

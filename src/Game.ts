@@ -8,6 +8,8 @@ import { ParticleManager } from './ParticleManager';
 import { EnemyManager } from './EnemyManager';
 import { GemManager } from './GemManager';
 import { UI } from './UI';
+import { OxygenController } from './OxygenController';
+import { OverlayEffect } from './OverlayEffect';
 
 export class Game {
   private app: Application;
@@ -20,6 +22,8 @@ export class Game {
   private enemyManager!: EnemyManager;
   private gemManager!: GemManager;
   private ui!: UI;
+  private oxygenController!: OxygenController;
+  private overlayEffect!: OverlayEffect;
 
   constructor() {
     this.app = new Application();
@@ -68,6 +72,12 @@ export class Game {
     // Initialize gem manager
     this.gemManager = new GemManager();
 
+    // Initialize oxygen controller
+    this.oxygenController = new OxygenController();
+
+    // Initialize overlay effect
+    this.overlayEffect = new OverlayEffect();
+
     // Initialize UI
     this.ui = new UI();
 
@@ -96,6 +106,19 @@ export class Game {
       this.player.addExp(exp);
     });
 
+    // Oxygen callbacks
+    this.oxygenController.setOnDamage((damage) => {
+      this.player.takeSlipDamage(damage);
+    });
+
+    this.oxygenController.setOnWarning((isWarning) => {
+      this.overlayEffect.setWarning(isWarning);
+    });
+
+    this.oxygenController.setOnDepleted((isDepleted) => {
+      this.overlayEffect.setDepleted(isDepleted);
+    });
+
     // Build scene hierarchy
     this.gameContainer.addChild(this.wallManager.container);
     this.gameContainer.addChild(this.gemManager.container);
@@ -105,7 +128,8 @@ export class Game {
     this.gameContainer.addChild(this.particleManager.container);
 
     this.app.stage.addChild(this.gameContainer);
-    this.app.stage.addChild(this.ui.container); // UI is on top, not affected by camera
+    this.app.stage.addChild(this.overlayEffect.container); // Overlay on top of game
+    this.app.stage.addChild(this.ui.container); // UI is on top of everything
 
     // Start game loop
     this.app.ticker.add(this.update.bind(this));
@@ -127,7 +151,15 @@ export class Game {
     this.particleManager.update(deltaTime);
     this.wallManager.update();
 
+    // Update oxygen
+    this.oxygenController.update(deltaTime);
+
+    // Update overlay effects
+    this.overlayEffect.update(deltaTime);
+
     // Update UI
+    this.ui.update(deltaTime);
+    this.ui.updateOxygen(this.oxygenController.oxygen, this.oxygenController.maxOxygen);
     this.ui.updateHP(this.player.hp, this.player.maxHp);
     this.ui.updateEXP(this.player.exp);
 
