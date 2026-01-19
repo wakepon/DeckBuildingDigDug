@@ -14,11 +14,12 @@ import {
 } from './constants';
 
 interface Spawner {
+  id: number;
   x: number;
   y: number;
   graphics: Graphics;
   timer: number;
-  spawnedCount: number;
+  aliveCount: number; // Current number of alive enemies from this spawner
   active: boolean;
 }
 
@@ -26,6 +27,7 @@ export class EnemyManager {
   public container: Container;
   private enemies: Enemy[] = [];
   private spawners: Spawner[] = [];
+  private nextSpawnerId: number = 0;
   private onEnemyDeath: ((x: number, y: number) => void) | null = null;
   private onPlayerDamage: ((damage: number) => void) | null = null;
 
@@ -56,16 +58,17 @@ export class EnemyManager {
 
   private createSpawner(x: number, y: number): void {
     const graphics = new Graphics();
-    this.drawSpawner(graphics, true);
+    this.drawSpawner(graphics, true, 0);
     graphics.x = x;
     graphics.y = y;
 
     const spawner: Spawner = {
+      id: this.nextSpawnerId++,
       x,
       y,
       graphics,
       timer: SPAWNER_INTERVAL,
-      spawnedCount: 0,
+      aliveCount: 0,
       active: true,
     };
 
@@ -73,7 +76,7 @@ export class EnemyManager {
     this.container.addChild(graphics);
   }
 
-  private drawSpawner(graphics: Graphics, active: boolean): void {
+  private drawSpawner(graphics: Graphics, active: boolean, aliveCount: number): void {
     graphics.clear();
 
     const color = active ? SPAWNER_COLOR : 0x444444;
@@ -93,12 +96,26 @@ export class EnemyManager {
     // Outer ring
     graphics.circle(0, 0, SPAWNER_SIZE / 2 + 3);
     graphics.stroke({ width: 3, color: active ? 0xff00ff : 0x555555, alpha: 0.8 });
+
+    // Show enemy count indicator (small dots)
+    if (active) {
+      for (let i = 0; i < aliveCount; i++) {
+        const dotAngle = (i / SPAWNER_MAX_ENEMIES) * Math.PI * 2 - Math.PI / 2;
+        const dotR = SPAWNER_SIZE / 2 + 8;
+        graphics.circle(Math.cos(dotAngle) * dotR, Math.sin(dotAngle) * dotR, 3);
+        graphics.fill(0xff4444);
+      }
+    }
   }
 
-  spawnEnemy(x: number, y: number): void {
-    const enemy = new Enemy(x, y);
+  spawnEnemy(x: number, y: number, spawnerId: number = -1): void {
+    const enemy = new Enemy(x, y, spawnerId);
     this.enemies.push(enemy);
     this.container.addChild(enemy.graphics);
+  }
+
+  private getSpawnerById(id: number): Spawner | undefined {
+    return this.spawners.find(s => s.id === id);
   }
 
   update(deltaTime: number, playerX: number, playerY: number): void {
@@ -107,7 +124,7 @@ export class EnemyManager {
       const spawner = this.spawners[i];
 
       if (!spawner.active) {
-        this.drawSpawner(spawner.graphics, false);
+        this.drawSpawner(spawner.graphics, false, 0);
         continue;
       }
 
@@ -118,20 +135,20 @@ export class EnemyManager {
 
       if (dist < SPAWNER_DISABLE_RANGE) {
         spawner.active = false;
-        this.drawSpawner(spawner.graphics, false);
+        this.drawSpawner(spawner.graphics, false, 0);
         continue;
       }
 
-      // Spawn timer
+      // Spawn timer - only spawn if alive count is below max
       spawner.timer -= deltaTime;
-      if (spawner.timer <= 0 && spawner.spawnedCount < SPAWNER_MAX_ENEMIES) {
-        this.spawnEnemy(spawner.x, spawner.y);
-        spawner.spawnedCount++;
+      if (spawner.timer <= 0 && spawner.aliveCount < SPAWNER_MAX_ENEMIES) {
+        this.spawnEnemy(spawner.x, spawner.y, spawner.id);
+        spawner.aliveCount++;
         spawner.timer = SPAWNER_INTERVAL;
       }
 
       // Animate spawner
-      this.drawSpawner(spawner.graphics, true);
+      this.drawSpawner(spawner.graphics, true, spawner.aliveCount);
     }
 
     // Update enemies
@@ -139,6 +156,14 @@ export class EnemyManager {
       const enemy = this.enemies[i];
 
       if (!enemy.active) {
+        // Decrement spawner's alive count if this enemy was from a spawner
+        if (enemy.spawnerId >= 0) {
+          const spawner = this.getSpawnerById(enemy.spawnerId);
+          if (spawner && spawner.aliveCount > 0) {
+            spawner.aliveCount--;
+          }
+        }
+
         if (this.onEnemyDeath) {
           this.onEnemyDeath(enemy.x, enemy.y);
         }

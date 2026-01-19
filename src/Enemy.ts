@@ -7,15 +7,17 @@ export class Enemy {
   public y: number;
   public hp: number;
   public active: boolean = true;
+  public spawnerId: number = -1; // -1 means not spawned from a spawner
 
   private targetX: number = 0;
   private targetY: number = 0;
   private hitFlashTime: number = 0;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, spawnerId: number = -1) {
     this.x = x;
     this.y = y;
     this.hp = ENEMY_HP;
+    this.spawnerId = spawnerId;
 
     this.graphics = new Graphics();
     this.draw();
