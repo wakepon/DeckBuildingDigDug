@@ -30,9 +30,19 @@ export class EnemyManager {
   private nextSpawnerId: number = 0;
   private onEnemyDeath: ((x: number, y: number) => void) | null = null;
   private onPlayerDamage: ((damage: number) => void) | null = null;
+  private enemyHP: number = 3;
+  private enemySpawnChance: number = ENEMY_SPAWN_CHANCE;
 
   constructor() {
     this.container = new Container();
+  }
+
+  setEnemyHP(hp: number): void {
+    this.enemyHP = hp;
+  }
+
+  setEnemySpawnChance(chance: number): void {
+    this.enemySpawnChance = chance;
   }
 
   setOnEnemyDeath(callback: (x: number, y: number) => void): void {
@@ -50,8 +60,8 @@ export class EnemyManager {
       return;
     }
 
-    // Check for enemy spawn (20% chance)
-    if (Math.random() < ENEMY_SPAWN_CHANCE) {
+    // Check for enemy spawn (scaled chance)
+    if (Math.random() < this.enemySpawnChance) {
       this.spawnEnemy(x, y);
     }
   }
@@ -109,7 +119,7 @@ export class EnemyManager {
   }
 
   spawnEnemy(x: number, y: number, spawnerId: number = -1): void {
-    const enemy = new Enemy(x, y, spawnerId);
+    const enemy = new Enemy(x, y, spawnerId, this.enemyHP);
     this.enemies.push(enemy);
     this.container.addChild(enemy.graphics);
   }
@@ -205,5 +215,20 @@ export class EnemyManager {
       }
     }
     return false;
+  }
+
+  clear(): void {
+    for (const enemy of this.enemies) {
+      this.container.removeChild(enemy.graphics);
+      enemy.destroy();
+    }
+    this.enemies = [];
+
+    for (const spawner of this.spawners) {
+      this.container.removeChild(spawner.graphics);
+      spawner.graphics.destroy();
+    }
+    this.spawners = [];
+    this.nextSpawnerId = 0;
   }
 }

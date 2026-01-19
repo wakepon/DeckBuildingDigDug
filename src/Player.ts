@@ -183,4 +183,12 @@ export class Player {
   get isInvincible(): boolean {
     return this._invincibilityTime > 0;
   }
+
+  resetPosition(x: number, y: number): void {
+    this._x = x;
+    this._y = y;
+    this._invincibilityTime = 0;
+    this.updatePosition();
+    this.draw();
+  }
 }

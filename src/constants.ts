@@ -80,3 +80,23 @@ export const OXYGEN_MAX = 60; // 60 seconds worth
 export const OXYGEN_DRAIN_RATE = 1; // per second
 export const OXYGEN_WARNING_THRESHOLD = 0.2; // 20%
 export const OXYGEN_DAMAGE_RATE = 0.03; // 3% of max HP per second when oxygen is 0
+
+// Stairs settings
+export const STAIRS_SIZE = 36;
+export const STAIRS_COLOR = 0xffdd00;
+export const STAIRS_MIN_DISTANCE = 5; // Minimum wall distance from spawn
+
+// Oxygen Tank settings
+export const OXYGEN_TANK_SIZE = 20;
+export const OXYGEN_TANK_COLOR = 0x44aaff;
+export const OXYGEN_TANK_SPAWN_CHANCE = 0.01; // 1% chance on wall break
+export const OXYGEN_TANK_RESTORE = 0.1; // 10% of max oxygen
+export const OXYGEN_TANK_INITIAL_COUNT = 4; // Tanks in safe zone at floor start
+
+// Floor scaling settings
+export const FLOOR_ENEMY_HP_SCALE = 0.2; // +20% HP per floor
+export const FLOOR_ENEMY_SPAWN_SCALE = 0.02; // +2% spawn chance per floor
+export const FLOOR_GEM_EXP_SCALE = 0.3; // +30% exp per floor
+
+// Transition settings
+export const TRANSITION_DURATION = 0.5; // seconds for fade

@@ -127,4 +127,13 @@ export class BulletManager {
     bullet.destroy();
     this.bullets.splice(index, 1);
   }
+
+  clear(): void {
+    for (const bullet of this.bullets) {
+      this.container.removeChild(bullet.graphics);
+      bullet.destroy();
+    }
+    this.bullets = [];
+    this.fireCooldown = 0;
+  }
 }

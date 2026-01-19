@@ -7,6 +7,7 @@ import {
   PLAYER_SPAWN_CENTER_X,
   PLAYER_SPAWN_CENTER_Y,
   PLAYER_SPAWN_RADIUS,
+  STAIRS_MIN_DISTANCE,
 } from './constants';
 
 interface Wall {
@@ -17,6 +18,7 @@ interface Wall {
 export class WallManager {
   public container: Container;
   private walls: (Wall | null)[][];
+  private _stairsPosition: { x: number; y: number } = { x: 0, y: 0 };
 
   constructor() {
     this.container = new Container();
@@ -25,6 +27,9 @@ export class WallManager {
   }
 
   private initializeWalls(): void {
+    // Generate stairs position first
+    this._stairsPosition = this.generateStairsPosition();
+
     for (let y = 0; y < GRID_ROWS; y++) {
       this.walls[y] = [];
       for (let x = 0; x < GRID_COLS; x++) {
@@ -40,6 +45,34 @@ export class WallManager {
         this.walls[y][x] = wall;
       }
     }
+  }
+
+  private generateStairsPosition(): { x: number; y: number } {
+    const validPositions: { x: number; y: number }[] = [];
+
+    for (let y = 0; y < GRID_ROWS; y++) {
+      for (let x = 0; x < GRID_COLS; x++) {
+        // Must not be in spawn area
+        if (this.isPlayerSpawnArea(x, y)) continue;
+
+        // Must be at least STAIRS_MIN_DISTANCE away from spawn center
+        const dx = Math.abs(x - PLAYER_SPAWN_CENTER_X);
+        const dy = Math.abs(y - PLAYER_SPAWN_CENTER_Y);
+        const manhattanDist = dx + dy;
+
+        if (manhattanDist >= STAIRS_MIN_DISTANCE) {
+          validPositions.push({ x, y });
+        }
+      }
+    }
+
+    // Pick random position
+    if (validPositions.length > 0) {
+      return validPositions[Math.floor(Math.random() * validPositions.length)];
+    }
+
+    // Fallback: far corner
+    return { x: GRID_COLS - 2, y: GRID_ROWS - 2 };
   }
 
   private isPlayerSpawnArea(x: number, y: number): boolean {
@@ -111,6 +144,31 @@ export class WallManager {
       this.drawWall(wall.graphics, wall.hp);
       return false; // Wall damaged but not destroyed
     }
+  }
+
+  public get stairsPosition(): { x: number; y: number } {
+    return this._stairsPosition;
+  }
+
+  public isStairsPosition(gridX: number, gridY: number): boolean {
+    return this._stairsPosition.x === gridX && this._stairsPosition.y === gridY;
+  }
+
+  public reset(): void {
+    // Clear all walls
+    for (let y = 0; y < GRID_ROWS; y++) {
+      for (let x = 0; x < GRID_COLS; x++) {
+        const wall = this.walls[y]?.[x];
+        if (wall) {
+          this.container.removeChild(wall.graphics);
+          wall.graphics.destroy();
+        }
+      }
+    }
+    this.walls = [];
+
+    // Reinitialize
+    this.initializeWalls();
   }
 
   public update(): void {
