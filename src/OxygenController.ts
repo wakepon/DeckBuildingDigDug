@@ -80,4 +80,8 @@ export class OxygenController {
   get isWarning(): boolean {
     return this.ratio <= OXYGEN_WARNING_THRESHOLD && !this.isDepleted;
   }
+
+  reset(): void {
+    this._oxygen = this._maxOxygen;
+  }
 }

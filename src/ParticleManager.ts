@@ -101,4 +101,12 @@ export class ParticleManager {
       }
     }
   }
+
+  clear(): void {
+    for (const p of this.particles) {
+      this.container.removeChild(p.graphics);
+      p.graphics.destroy();
+    }
+    this.particles = [];
+  }
 }

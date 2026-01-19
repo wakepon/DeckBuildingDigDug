@@ -13,10 +13,10 @@ export class Enemy {
   private targetY: number = 0;
   private hitFlashTime: number = 0;
 
-  constructor(x: number, y: number, spawnerId: number = -1) {
+  constructor(x: number, y: number, spawnerId: number = -1, hp: number = ENEMY_HP) {
     this.x = x;
     this.y = y;
-    this.hp = ENEMY_HP;
+    this.hp = hp;
     this.spawnerId = spawnerId;
 
     this.graphics = new Graphics();

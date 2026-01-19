@@ -6,6 +6,7 @@ export class GemManager {
   public container: Container;
   private gems: Gem[] = [];
   private onExpGained: ((exp: number) => void) | null = null;
+  private expValue: number = GEM_EXP_VALUE;
 
   constructor() {
     this.container = new Container();
@@ -13,6 +14,10 @@ export class GemManager {
 
   setOnExpGained(callback: (exp: number) => void): void {
     this.onExpGained = callback;
+  }
+
+  setExpValue(value: number): void {
+    this.expValue = value;
   }
 
   spawnGem(x: number, y: number): void {
@@ -29,12 +34,20 @@ export class GemManager {
 
       if (collected || !gem.active) {
         if (gem.collected && this.onExpGained) {
-          this.onExpGained(GEM_EXP_VALUE);
+          this.onExpGained(this.expValue);
         }
         this.container.removeChild(gem.graphics);
         gem.destroy();
         this.gems.splice(i, 1);
       }
     }
+  }
+
+  clear(): void {
+    for (const gem of this.gems) {
+      this.container.removeChild(gem.graphics);
+      gem.destroy();
+    }
+    this.gems = [];
   }
 }

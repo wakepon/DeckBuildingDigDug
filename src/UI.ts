@@ -23,6 +23,10 @@ export class UI {
   private expBarFill: Graphics;
   private expText: Text;
 
+  // Floor display (right side)
+  private floorBg: Graphics;
+  private floorText: Text;
+
   constructor() {
     this.container = new Container();
 
@@ -114,10 +118,40 @@ export class UI {
     this.expText.y = UI_PADDING + OXYGEN_BAR_HEIGHT + UI_BAR_HEIGHT + 13;
     this.container.addChild(this.expText);
 
+    // ===== FLOOR DISPLAY (Right side) =====
+    this.floorBg = new Graphics();
+    this.floorBg.roundRect(0, 0, 80, 36, 6);
+    this.floorBg.fill({ color: 0x222222, alpha: 0.8 });
+    this.floorBg.roundRect(0, 0, 80, 36, 6);
+    this.floorBg.stroke({ width: 2, color: 0xffdd00 });
+    this.floorBg.x = SCREEN_WIDTH - 90;
+    this.floorBg.y = UI_PADDING + OXYGEN_BAR_HEIGHT + 8;
+    this.container.addChild(this.floorBg);
+
+    this.floorText = new Text({
+      text: 'B1F',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 20,
+        fill: 0xffdd00,
+        fontWeight: 'bold',
+        dropShadow: {
+          color: 0x000000,
+          distance: 1,
+          blur: 2,
+        },
+      },
+    });
+    this.floorText.anchor.set(0.5);
+    this.floorText.x = SCREEN_WIDTH - 50;
+    this.floorText.y = UI_PADDING + OXYGEN_BAR_HEIGHT + 26;
+    this.container.addChild(this.floorText);
+
     // Initialize displays
     this.updateOxygen(60, 60);
     this.updateHP(100, 100);
     this.updateEXP(0);
+    this.updateFloor(1);
   }
 
   update(deltaTime: number): void {
@@ -212,5 +246,9 @@ export class UI {
     }
 
     this.expText.text = `EXP: ${exp} (Lv.${level + 1})`;
+  }
+
+  updateFloor(floor: number): void {
+    this.floorText.text = `B${floor}F`;
   }
 }
