@@ -49,7 +49,7 @@ export class UI {
     this.container.addChild(this.oxygenBarFill);
 
     this.oxygenText = new Text({
-      text: 'O2: 60',
+      text: '酸素量: 60',
       style: {
         fontFamily: 'Arial',
         fontSize: 14,
@@ -199,7 +199,7 @@ export class UI {
       }
     }
 
-    this.oxygenText.text = `O2: ${Math.ceil(current)}`;
+    this.oxygenText.text = `酸素量: ${Math.ceil(current)}`;
 
     // Text color change when critical
     if (ratio <= OXYGEN_WARNING_THRESHOLD) {
