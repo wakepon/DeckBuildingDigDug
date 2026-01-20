@@ -43,7 +43,7 @@ export class StatsDisplay {
       { label: 'ATK', value: `${Math.round(this.playerStats.attackPower * 100)}%`, color: 0xff4444 },
       { label: 'SPD', value: `${Math.round((1 / this.playerStats.fireRate) * 5 * 100) / 100}/s`, color: 0xffff00 },
       { label: 'MOV', value: `${Math.round(this.playerStats.moveSpeed)}`, color: 0x44ffff },
-      { label: 'O2', value: `-${Math.round((1 - this.playerStats.oxygenDrainRate) * 100)}%`, color: 0x88ccff },
+      { label: '酸素', value: `-${Math.round((1 - this.playerStats.oxygenDrainRate) * 100)}%`, color: 0x88ccff },
     ];
 
     // Draw background
