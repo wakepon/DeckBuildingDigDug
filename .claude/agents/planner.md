@@ -74,11 +74,6 @@ Create detailed steps with:
 ### Phase 2: [Phase Name]
 ...
 
-## Testing Strategy
-- Unit tests: [files to test]
-- Integration tests: [flows to test]
-- E2E tests: [user journeys to test]
-
 ## Risks & Mitigations
 - **Risk**: [Description]
   - Mitigation: [How to address]
@@ -94,9 +89,8 @@ Create detailed steps with:
 2. **Consider Edge Cases**: Think about error scenarios, null values, empty states
 3. **Minimize Changes**: Prefer extending existing code over rewriting
 4. **Maintain Patterns**: Follow existing project conventions
-5. **Enable Testing**: Structure changes to be easily testable
-6. **Think Incrementally**: Each step should be verifiable
-7. **Document Decisions**: Explain why, not just what
+5. **Think Incrementally**: Each step should be verifiable
+6. **Document Decisions**: Explain why, not just what
 
 ## When Planning Refactors
 
@@ -113,7 +107,6 @@ Create detailed steps with:
 - Duplicated code
 - Missing error handling
 - Hardcoded values
-- Missing tests
 - Performance bottlenecks
 
 **Remember**: A great plan is specific, actionable, and considers both the happy path and edge cases. The best plans enable confident, incremental implementation.
