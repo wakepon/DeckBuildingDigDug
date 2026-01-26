@@ -19,10 +19,8 @@ Review checklist:
 - Proper error handling
 - No exposed secrets or API keys
 - Input validation implemented
-- Good test coverage
 - Performance considerations addressed
 - Time complexity of algorithms analyzed
-- Licenses of integrated libraries checked
 
 Provide feedback organized by priority:
 - Critical issues (must fix)
@@ -30,17 +28,6 @@ Provide feedback organized by priority:
 - Suggestions (consider improving)
 
 Include specific examples of how to fix issues.
-
-## Security Checks (CRITICAL)
-
-- Hardcoded credentials (API keys, passwords, tokens)
-- SQL injection risks (string concatenation in queries)
-- XSS vulnerabilities (unescaped user input)
-- Missing input validation
-- Insecure dependencies (outdated, vulnerable)
-- Path traversal risks (user-controlled file paths)
-- CSRF vulnerabilities
-- Authentication bypasses
 
 ## Code Quality (HIGH)
 
@@ -50,24 +37,16 @@ Include specific examples of how to fix issues.
 - Missing error handling (try/catch)
 - console.log statements
 - Mutation patterns
-- Missing tests for new code
 
 ## Performance (MEDIUM)
 
 - Inefficient algorithms (O(n²) when O(n log n) possible)
 - Unnecessary re-renders in React
 - Missing memoization
-- Large bundle sizes
-- Unoptimized images
-- Missing caching
-- N+1 queries
 
 ## Best Practices (MEDIUM)
 
 - Emoji usage in code/comments
-- TODO/FIXME without tickets
-- Missing JSDoc for public APIs
-- Accessibility issues (missing ARIA labels, poor contrast)
 - Poor variable naming (x, tmp, data)
 - Magic numbers without explanation
 - Inconsistent formatting
@@ -76,13 +55,13 @@ Include specific examples of how to fix issues.
 
 For each issue:
 ```
-[CRITICAL] Hardcoded API key
+[Performance] Inefificient algorithm
 File: src/api/client.ts:42
 Issue: API key exposed in source code
 Fix: Move to environment variable
 
-const apiKey = "sk-abc123";  // ❌ Bad
-const apiKey = process.env.API_KEY;  // ✓ Good
+....;  // ❌ Bad Pattern
+....;  // ✓ Good Pattern
 ```
 
 ## Approval Criteria
@@ -91,14 +70,7 @@ const apiKey = process.env.API_KEY;  // ✓ Good
 - ⚠️ Warning: MEDIUM issues only (can merge with caution)
 - ❌ Block: CRITICAL or HIGH issues found
 
-## Project-Specific Guidelines (Example)
+## Project-Specific Guidelines 
 
-Add your project-specific checks here. Examples:
-- Follow MANY SMALL FILES principle (200-400 lines typical)
 - No emojis in codebase
-- Use immutability patterns (spread operator)
-- Verify database RLS policies
-- Check AI integration error handling
-- Validate cache fallback behavior
 
-Customize based on your project's `CLAUDE.md` or skill files.
