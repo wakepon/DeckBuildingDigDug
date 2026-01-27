@@ -10,11 +10,8 @@ Located in `~/.claude/agents/`:
 | architect | System design | Architectural decisions |
 | tdd-guide | Test-driven development | New features, bug fixes |
 | code-reviewer | Code review | After writing code |
-| security-reviewer | Security analysis | Before commits |
 | build-error-resolver | Fix build errors | When build fails |
-| e2e-runner | E2E testing | Critical user flows |
 | refactor-cleaner | Dead code cleanup | Code maintenance |
-| doc-updater | Documentation | Updating docs |
 
 ## Immediate Agent Usage
 
@@ -30,10 +27,9 @@ ALWAYS use parallel Task execution for independent operations:
 
 ```markdown
 # GOOD: Parallel execution
-Launch 3 agents in parallel:
-1. Agent 1: Security analysis of auth.ts
-2. Agent 2: Performance review of cache system
-3. Agent 3: Type checking of utils.ts
+Launch 2 agents in parallel:
+1. Agent 1: Performance review of cache system
+2. Agent 2: Type checking of utils.ts
 
 # BAD: Sequential when unnecessary
 First agent 1, then agent 2, then agent 3
