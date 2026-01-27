@@ -189,29 +189,6 @@ components/Button.tsx (with variant prop)
 }
 ```
 
-## Example Project-Specific Rules
-
-**CRITICAL - NEVER REMOVE:**
-- Privy authentication code
-- Solana wallet integration
-- Supabase database clients
-- Redis/OpenAI semantic search
-- Market trading logic
-- Real-time subscription handlers
-
-**SAFE TO REMOVE:**
-- Old unused components in components/ folder
-- Deprecated utility functions
-- Test files for deleted features
-- Commented-out code blocks
-- Unused TypeScript types/interfaces
-
-**ALWAYS VERIFY:**
-- Semantic search functionality (lib/redis.js, lib/openai.js)
-- Market data fetching (api/markets/*, api/market/[slug]/)
-- Authentication flows (HeaderWallet.tsx, UserMenu.tsx)
-- Trading functionality (Meteora SDK integration)
-
 ## Pull Request Template
 
 When opening PR with deletions:
@@ -288,7 +265,6 @@ If something breaks after removal:
 - During active feature development
 - Right before a production deployment
 - When codebase is unstable
-- Without proper test coverage
 - On code you don't understand
 
 ## Success Metrics
