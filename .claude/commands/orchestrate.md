@@ -11,7 +11,7 @@ Sequential agent workflow for complex tasks.
 ### feature
 Full feature implementation workflow:
 ```
-planner -> tdd-guide -> code-reviewer -> security-reviewer
+planner -> tdd-guide -> code-reviewer
 ```
 
 ### bugfix
@@ -24,12 +24,6 @@ explorer -> tdd-guide -> code-reviewer
 Safe refactoring workflow:
 ```
 architect -> code-reviewer -> tdd-guide
-```
-
-### security
-Security-focused review:
-```
-security-reviewer -> code-reviewer -> architect
 ```
 
 ## Execution Pattern
@@ -88,12 +82,6 @@ Executes:
    - Reviews implementation
    - Checks for issues
    - Suggests improvements
-   - Output: `HANDOFF: code-reviewer -> security-reviewer`
-
-4. **Security Reviewer Agent**
-   - Security audit
-   - Vulnerability check
-   - Final approval
    - Output: Final Report
 
 ## Final Report Format
@@ -103,7 +91,7 @@ ORCHESTRATION REPORT
 ====================
 Workflow: feature
 Task: Add user authentication
-Agents: planner -> tdd-guide -> code-reviewer -> security-reviewer
+Agents: planner -> tdd-guide -> code-reviewer
 
 SUMMARY
 -------
@@ -114,7 +102,6 @@ AGENT OUTPUTS
 Planner: [summary]
 TDD Guide: [summary]
 Code Reviewer: [summary]
-Security Reviewer: [summary]
 
 FILES CHANGED
 -------------
@@ -123,10 +110,6 @@ FILES CHANGED
 TEST RESULTS
 ------------
 [Test pass/fail summary]
-
-SECURITY STATUS
----------------
-[Security findings]
 
 RECOMMENDATION
 --------------
@@ -141,7 +124,6 @@ For independent checks, run agents in parallel:
 ### Parallel Phase
 Run simultaneously:
 - code-reviewer (quality)
-- security-reviewer (security)
 - architect (design)
 
 ### Merge Results
@@ -154,7 +136,6 @@ $ARGUMENTS:
 - `feature <description>` - Full feature workflow
 - `bugfix <description>` - Bug fix workflow
 - `refactor <description>` - Refactoring workflow
-- `security <description>` - Security review workflow
 - `custom <agents> <description>` - Custom agent sequence
 
 ## Custom Workflow Example
@@ -167,6 +148,5 @@ $ARGUMENTS:
 
 1. **Start with planner** for complex features
 2. **Always include code-reviewer** before merge
-3. **Use security-reviewer** for auth/payment/PII
 4. **Keep handoffs concise** - focus on what next agent needs
 5. **Run verification** between agents if needed

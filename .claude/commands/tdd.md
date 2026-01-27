@@ -1,5 +1,5 @@
 ---
-description: Enforce test-driven development workflow. Scaffold interfaces, generate tests FIRST, then implement minimal code to pass. Ensure 80%+ coverage.
+description: Enforce test-driven development workflow. Scaffold interfaces, generate tests FIRST, then implement minimal code to pass.
 ---
 
 # TDD Command
@@ -12,7 +12,6 @@ This command invokes the **tdd-guide** agent to enforce test-driven development 
 2. **Generate Tests First** - Write failing tests (RED)
 3. **Implement Minimal Code** - Write just enough to pass (GREEN)
 4. **Refactor** - Improve code while keeping tests green (REFACTOR)
-5. **Verify Coverage** - Ensure 80%+ test coverage
 
 ## When to Use
 
@@ -33,7 +32,6 @@ The tdd-guide agent will:
 4. **Write minimal implementation** to make tests pass
 5. **Run tests** and verify they pass
 6. **Refactor** code while keeping tests green
-7. **Check coverage** and add more tests if below 80%
 
 ## TDD Cycle
 
@@ -237,19 +235,6 @@ PASS lib/liquidity.test.ts
 ```
 
 ✅ Refactoring complete, tests still passing!
-
-## Step 8: Check Coverage
-
-```bash
-npm test -- --coverage lib/liquidity.test.ts
-
-File           | % Stmts | % Branch | % Funcs | % Lines
----------------|---------|----------|---------|--------
-liquidity.ts   |   100   |   100    |   100   |   100
-
-Coverage: 100% ✅ (Target: 80%)
-```
-
 ✅ TDD session complete!
 ```
 
@@ -261,7 +246,6 @@ Coverage: 100% ✅ (Target: 80%)
 - ✅ Write minimal code to make tests pass
 - ✅ Refactor only after tests are green
 - ✅ Add edge cases and error scenarios
-- ✅ Aim for 80%+ coverage (100% for critical code)
 
 **DON'T:**
 - ❌ Write implementation before tests
@@ -269,7 +253,6 @@ Coverage: 100% ✅ (Target: 80%)
 - ❌ Write too much code at once
 - ❌ Ignore failing tests
 - ❌ Test implementation details (test behavior)
-- ❌ Mock everything (prefer integration tests)
 
 ## Test Types to Include
 
@@ -278,26 +261,6 @@ Coverage: 100% ✅ (Target: 80%)
 - Edge cases (empty, null, max values)
 - Error conditions
 - Boundary values
-
-**Integration Tests** (Component-level):
-- API endpoints
-- Database operations
-- External service calls
-- React components with hooks
-
-**E2E Tests** (use `/e2e` command):
-- Critical user flows
-- Multi-step processes
-- Full stack integration
-
-## Coverage Requirements
-
-- **80% minimum** for all code
-- **100% required** for:
-  - Financial calculations
-  - Authentication logic
-  - Security-critical code
-  - Core business logic
 
 ## Important Notes
 
@@ -315,7 +278,6 @@ Never skip the RED phase. Never write code before tests.
 - Use `/tdd` to implement with tests
 - Use `/build-and-fix` if build errors occur
 - Use `/code-review` to review implementation
-- Use `/test-coverage` to verify coverage
 
 ## Related Agents
 
