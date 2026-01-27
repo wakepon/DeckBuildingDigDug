@@ -14,6 +14,7 @@ import {
   UPGRADE_OXYGEN_REDUCTION,
   UPGRADE_PENETRATION,
   UPGRADE_GEM_ATTRACT,
+  UPGRADE_MULTI_WAY_SHOT,
 } from './constants';
 
 export type UpgradeType =
@@ -24,7 +25,8 @@ export type UpgradeType =
   | 'maxHp'
   | 'oxygenReduction'
   | 'penetration'
-  | 'gemAttract';
+  | 'gemAttract'
+  | 'multiWayShot';
 
 export interface UpgradeInfo {
   type: UpgradeType;
@@ -91,6 +93,13 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     icon: '◆',
     color: 0x00ffff,
   },
+  multiWayShot: {
+    type: 'multiWayShot',
+    name: 'マルチショット',
+    description: '弾の発射方向+1',
+    icon: '∴',
+    color: 0xff88ff,
+  },
 };
 
 export class PlayerStats {
@@ -107,6 +116,7 @@ export class PlayerStats {
   private oxygenReductionMultiplier: number = 1;
   private _penetrationCount: number = 0;
   private gemAttractMultiplier: number = 1;
+  private _multiWayShotLevel: number = 1;
 
   // Track acquired upgrades
   private _acquiredUpgrades: UpgradeType[] = [];
@@ -144,6 +154,10 @@ export class PlayerStats {
 
   get gemAttractRange(): number {
     return GEM_ATTRACT_RANGE * this.gemAttractMultiplier;
+  }
+
+  get multiWayShotLevel(): number {
+    return this._multiWayShotLevel;
   }
 
   get level(): number {
@@ -204,6 +218,9 @@ export class PlayerStats {
       case 'gemAttract':
         this.gemAttractMultiplier += UPGRADE_GEM_ATTRACT;
         break;
+      case 'multiWayShot':
+        this._multiWayShotLevel += UPGRADE_MULTI_WAY_SHOT;
+        break;
     }
   }
 
@@ -236,6 +253,7 @@ export class PlayerStats {
     this.oxygenReductionMultiplier = 1;
     this._penetrationCount = 0;
     this.gemAttractMultiplier = 1;
+    this._multiWayShotLevel = 1;
     this._acquiredUpgrades = [];
   }
 }

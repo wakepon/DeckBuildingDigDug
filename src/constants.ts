@@ -114,6 +114,10 @@ export const UPGRADE_MAX_HP = 20; // +20 HP
 export const UPGRADE_OXYGEN_REDUCTION = 0.1; // -10%
 export const UPGRADE_PENETRATION = 2; // Penetrate 2 walls
 export const UPGRADE_GEM_ATTRACT = 0.5; // +50%
+export const UPGRADE_MULTI_WAY_SHOT = 1; // +1 bullet direction per upgrade
+
+// Multi-way shot settings
+export const MULTI_WAY_SHOT_ANGLE_SPREAD = (30 * Math.PI) / 180; // 30 degrees in radians
 
 // Elite enemy settings
 export const ELITE_SPAWN_CHANCE = 0.01; // 1% chance on wall break

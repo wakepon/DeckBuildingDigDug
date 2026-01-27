@@ -5,6 +5,7 @@ import { InputManager } from './InputManager';
 import { Player } from './Player';
 import { EnemyManager } from './EnemyManager';
 import { PlayerStats } from './PlayerStats';
+import { calculateMultiWayShotDirections } from './multiWayShotUtils';
 import {
   TILE_SIZE,
   GRID_COLS,
@@ -124,16 +125,26 @@ export class BulletManager {
     // Don't fire if mouse is too close
     if (Math.abs(dirX) < 1 && Math.abs(dirY) < 1) return;
 
-    const bullet = new Bullet(
-      this.player.x,
-      this.player.y,
+    // Calculate multiple bullet directions based on multi-way shot level
+    const directions = calculateMultiWayShotDirections(
       dirX,
       dirY,
-      this.playerStats.bulletSize,
-      this.playerStats.penetrationCount
+      this.playerStats.multiWayShotLevel
     );
-    this.bullets.push(bullet);
-    this.container.addChild(bullet.graphics);
+
+    // Create a bullet for each direction
+    for (const direction of directions) {
+      const bullet = new Bullet(
+        this.player.x,
+        this.player.y,
+        direction.dirX,
+        direction.dirY,
+        this.playerStats.bulletSize,
+        this.playerStats.penetrationCount
+      );
+      this.bullets.push(bullet);
+      this.container.addChild(bullet.graphics);
+    }
   }
 
   private removeBullet(index: number): void {
