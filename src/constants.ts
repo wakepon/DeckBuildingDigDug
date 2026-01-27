@@ -116,7 +116,7 @@ export const UPGRADE_PENETRATION = 2; // Penetrate 2 walls
 export const UPGRADE_GEM_ATTRACT = 0.5; // +50%
 
 // Elite enemy settings
-export const ELITE_SPAWN_CHANCE = 0.02; // 2% chance on wall break
+export const ELITE_SPAWN_CHANCE = 0.01; // 1% chance on wall break
 export const ELITE_HP_MULTIPLIER = 5;
 export const ELITE_SIZE_MULTIPLIER = 1.8;
 export const ELITE_COLOR = 0xff00ff; // Magenta
