@@ -105,8 +105,9 @@ export class Game {
     this.enemyManager.setEnemyHP(this.floorManager.getEnemyHP());
     this.enemyManager.setEnemySpawnChance(this.floorManager.getEnemySpawnChance());
 
-    // Initialize gem manager with stats and scaled EXP
+    // Initialize gem manager with stats, EventBus, and scaled EXP
     this.gemManager = new GemManager(this.playerStats);
+    this.gemManager.setEventBus(this.eventBus);
     this.gemManager.setExpValue(this.floorManager.getGemExpValue());
 
     // Initialize oxygen tank manager

@@ -2,6 +2,7 @@ import { Container } from 'pixi.js';
 import { Gem } from './Gem';
 import { PlayerStats } from './PlayerStats';
 import { GEM_EXP_VALUE } from './constants';
+import { EventBus } from './EventBus';
 
 export class GemManager {
   public container: Container;
@@ -9,6 +10,7 @@ export class GemManager {
   private playerStats: PlayerStats;
   private onExpGained: ((exp: number) => void) | null = null;
   private expValue: number = GEM_EXP_VALUE;
+  private eventBus: EventBus | null = null;
 
   constructor(playerStats: PlayerStats) {
     this.playerStats = playerStats;
@@ -17,6 +19,10 @@ export class GemManager {
 
   setOnExpGained(callback: (exp: number) => void): void {
     this.onExpGained = callback;
+  }
+
+  setEventBus(eventBus: EventBus): void {
+    this.eventBus = eventBus;
   }
 
   setExpValue(value: number): void {
@@ -42,8 +48,14 @@ export class GemManager {
       const collected = gem.update(deltaTime, playerX, playerY);
 
       if (collected || !gem.active) {
-        if (gem.collected && this.onExpGained) {
-          this.onExpGained(this.expValue);
+        if (gem.collected) {
+          if (this.eventBus) {
+            this.eventBus.emit({ type: 'GEM_COLLECTED', exp: this.expValue });
+          }
+          // Keep backward compatibility
+          if (this.onExpGained) {
+            this.onExpGained(this.expValue);
+          }
         }
         this.container.removeChild(gem.graphics);
         gem.destroy();
