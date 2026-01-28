@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EnemyManager } from '../EnemyManager';
+import { EventBus } from '../EventBus';
 import { ENEMY_DAMAGE, ELITE_DAMAGE } from '../constants';
 
 // Mock PIXI.js
@@ -96,14 +97,16 @@ vi.mock('../TreasureChest', () => {
 
 describe('EnemyManager Damage Integration', () => {
   let enemyManager: EnemyManager;
+  let eventBus: EventBus;
   let damageReceived: number | null;
 
   beforeEach(() => {
-    enemyManager = new EnemyManager();
+    eventBus = new EventBus();
+    enemyManager = new EnemyManager(eventBus);
     damageReceived = null;
 
-    enemyManager.setOnPlayerDamage((damage: number) => {
-      damageReceived = damage;
+    eventBus.on('PLAYER_DAMAGED', (event) => {
+      damageReceived = event.damage;
     });
   });
 

@@ -121,17 +121,15 @@ describe('EnemyManager EventBus Integration', () => {
 
   beforeEach(() => {
     eventBus = new EventBus();
-    enemyManager = new EnemyManager();
-    enemyManager.setEventBus(eventBus);
+    enemyManager = new EnemyManager(eventBus);
   });
 
-  describe('setEventBus', () => {
-    it('should accept an EventBus instance', () => {
-      const manager = new EnemyManager();
+  describe('constructor with EventBus', () => {
+    it('should accept an EventBus instance in constructor', () => {
       const bus = new EventBus();
 
       // Should not throw
-      expect(() => manager.setEventBus(bus)).not.toThrow();
+      expect(() => new EnemyManager(bus)).not.toThrow();
     });
   });
 
@@ -231,46 +229,4 @@ describe('EnemyManager EventBus Integration', () => {
     });
   });
 
-  describe('backward compatibility', () => {
-    it('should still work with old callback pattern', () => {
-      const manager = new EnemyManager();
-      let callbackCalled = false;
-
-      manager.setOnEnemyDeath(() => {
-        callbackCalled = true;
-      });
-
-      // Spawn and kill enemy
-      manager.spawnEnemy(100, 100);
-      manager.damageEnemyAt(100, 100, 50, 100);
-      manager.update(0.016, 500, 500);
-
-      expect(callbackCalled).toBe(true);
-    });
-
-    it('should emit events AND call callbacks when both are set', () => {
-      const manager = new EnemyManager();
-      const bus = new EventBus();
-      manager.setEventBus(bus);
-
-      let callbackCalled = false;
-      let eventEmitted = false;
-
-      manager.setOnEnemyDeath(() => {
-        callbackCalled = true;
-      });
-
-      bus.on('ENEMY_DIED', () => {
-        eventEmitted = true;
-      });
-
-      // Spawn and kill enemy
-      manager.spawnEnemy(100, 100);
-      manager.damageEnemyAt(100, 100, 50, 100);
-      manager.update(0.016, 500, 500);
-
-      expect(callbackCalled).toBe(true);
-      expect(eventEmitted).toBe(true);
-    });
-  });
 });

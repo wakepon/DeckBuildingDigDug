@@ -37,19 +37,12 @@ export class EnemyManager {
   private treasureChests: TreasureChest[] = [];
   private spawners: Spawner[] = [];
   private nextSpawnerId: number = 0;
-  private eventBus: EventBus | null = null;
-  private onEnemyDeath: ((x: number, y: number) => void) | null = null;
-  private onEliteDeath: ((x: number, y: number) => void) | null = null;
-  private onChestCollected: ((upgradeCount: number) => void) | null = null;
-  private onPlayerDamage: ((damage: number) => void) | null = null;
+  private eventBus: EventBus;
   private enemyHP: number = ENEMY_HP;
   private enemySpawnChance: number = ENEMY_SPAWN_CHANCE;
 
-  constructor() {
+  constructor(eventBus: EventBus) {
     this.container = new Container();
-  }
-
-  setEventBus(eventBus: EventBus): void {
     this.eventBus = eventBus;
   }
 
@@ -59,22 +52,6 @@ export class EnemyManager {
 
   setEnemySpawnChance(chance: number): void {
     this.enemySpawnChance = chance;
-  }
-
-  setOnEnemyDeath(callback: (x: number, y: number) => void): void {
-    this.onEnemyDeath = callback;
-  }
-
-  setOnEliteDeath(callback: (x: number, y: number) => void): void {
-    this.onEliteDeath = callback;
-  }
-
-  setOnChestCollected(callback: (upgradeCount: number) => void): void {
-    this.onChestCollected = callback;
-  }
-
-  setOnPlayerDamage(callback: (damage: number) => void): void {
-    this.onPlayerDamage = callback;
   }
 
   onWallDestroyed(x: number, y: number): void {
@@ -215,16 +192,11 @@ export class EnemyManager {
         }
 
         // Emit EventBus event
-        if (this.eventBus) {
-          this.eventBus.emit({ type: 'ENEMY_DIED', x: enemy.x, y: enemy.y });
-        }
-        // Keep backward compatibility with callback
-        if (this.onEnemyDeath) {
-          this.onEnemyDeath(enemy.x, enemy.y);
-        }
+        this.eventBus.emit({ type: 'ENEMY_DIED', x: enemy.x, y: enemy.y });
+
         this.container.removeChild(enemy.graphics);
         enemy.destroy();
-        this.enemies.splice(i, 1);
+        this.enemies = this.enemies.filter((_, idx) => idx !== i);
         continue;
       }
 
@@ -234,8 +206,8 @@ export class EnemyManager {
       const dist = getDistance(enemy.x, enemy.y, playerX, playerY);
       const collisionDist = (PLAYER_SIZE / 2) + (ENEMY_SIZE / 2);
 
-      if (dist < collisionDist && this.onPlayerDamage) {
-        this.onPlayerDamage(ENEMY_DAMAGE);
+      if (dist < collisionDist) {
+        this.eventBus.emit({ type: 'PLAYER_DAMAGED', damage: ENEMY_DAMAGE });
       }
     }
 
@@ -248,16 +220,11 @@ export class EnemyManager {
         this.spawnTreasureChest(elite.x, elite.y);
 
         // Emit EventBus event
-        if (this.eventBus) {
-          this.eventBus.emit({ type: 'ELITE_DIED', x: elite.x, y: elite.y });
-        }
-        // Keep backward compatibility with callback
-        if (this.onEliteDeath) {
-          this.onEliteDeath(elite.x, elite.y);
-        }
+        this.eventBus.emit({ type: 'ELITE_DIED', x: elite.x, y: elite.y });
+
         this.container.removeChild(elite.graphics);
         elite.destroy();
-        this.eliteEnemies.splice(i, 1);
+        this.eliteEnemies = this.eliteEnemies.filter((_, idx) => idx !== i);
         continue;
       }
 
@@ -267,8 +234,8 @@ export class EnemyManager {
       const dist = getDistance(elite.x, elite.y, playerX, playerY);
       const collisionDist = (PLAYER_SIZE / 2) + elite.radius;
 
-      if (dist < collisionDist && this.onPlayerDamage) {
-        this.onPlayerDamage(ELITE_DAMAGE);
+      if (dist < collisionDist) {
+        this.eventBus.emit({ type: 'PLAYER_DAMAGED', damage: ELITE_DAMAGE });
       }
     }
 
@@ -281,16 +248,11 @@ export class EnemyManager {
       // Check collision with player
       if (chest.checkCollision(playerX, playerY)) {
         // Emit EventBus event
-        if (this.eventBus) {
-          this.eventBus.emit({ type: 'CHEST_COLLECTED', upgradeCount: chest.upgradeCount });
-        }
-        // Keep backward compatibility with callback
-        if (this.onChestCollected) {
-          this.onChestCollected(chest.upgradeCount);
-        }
+        this.eventBus.emit({ type: 'CHEST_COLLECTED', upgradeCount: chest.upgradeCount });
+
         this.container.removeChild(chest.graphics);
         chest.destroy();
-        this.treasureChests.splice(i, 1);
+        this.treasureChests = this.treasureChests.filter((_, idx) => idx !== i);
       }
     }
   }

@@ -124,12 +124,27 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
   },
 };
 
+/**
+ * PlayerStats manages all player statistics and upgrades.
+ *
+ * INTENTIONAL MUTABLE STATE:
+ * This class uses mutable state patterns for performance optimization.
+ * Player stats are frequently updated during gameplay (exp gains, level ups,
+ * upgrade applications) and creating new instances for each change would
+ * introduce unnecessary object allocation overhead in the game loop.
+ *
+ * The mutable approach is acceptable here because:
+ * 1. PlayerStats is a singleton-like object owned by the Game instance
+ * 2. State changes are controlled through well-defined methods (addExp, applyUpgrade)
+ * 3. The performance benefit is significant for a real-time game
+ * 4. External access is read-only through getter methods
+ */
 export class PlayerStats {
-  // Base stats
+  // Base stats (mutable for performance)
   private _level: number = 1;
   private _exp: number = 0;
 
-  // Upgrade multipliers/counts
+  // Upgrade multipliers/counts (mutable for performance)
   private attackPowerMultiplier: number = 1;
   private attackSpeedMultiplier: number = 1;
   private bulletSizeMultiplier: number = 1;
@@ -141,7 +156,7 @@ export class PlayerStats {
   private _multiWayShotLevel: number = 1;
   private _bounceCount: number = 0;
 
-  // Track acquired upgrades
+  // Track acquired upgrades (uses immutable pattern for array updates)
   private _acquiredUpgrades: UpgradeType[] = [];
 
   constructor() {}

@@ -99,19 +99,17 @@ export class Game {
     // Initialize particle manager
     this.particleManager = new ParticleManager();
 
-    // Initialize enemy manager with scaled HP and EventBus
-    this.enemyManager = new EnemyManager();
-    this.enemyManager.setEventBus(this.eventBus);
+    // Initialize enemy manager with EventBus, scaled HP and spawn chance
+    this.enemyManager = new EnemyManager(this.eventBus);
     this.enemyManager.setEnemyHP(this.floorManager.getEnemyHP());
     this.enemyManager.setEnemySpawnChance(this.floorManager.getEnemySpawnChance());
 
     // Initialize gem manager with stats, EventBus, and scaled EXP
-    this.gemManager = new GemManager(this.playerStats);
-    this.gemManager.setEventBus(this.eventBus);
+    this.gemManager = new GemManager(this.playerStats, this.eventBus);
     this.gemManager.setExpValue(this.floorManager.getGemExpValue());
 
-    // Initialize oxygen tank manager
-    this.oxygenTankManager = new OxygenTankManager();
+    // Initialize oxygen tank manager with EventBus
+    this.oxygenTankManager = new OxygenTankManager(this.eventBus);
 
     // Initialize oxygen controller with stats
     this.oxygenController = new OxygenController(this.playerStats);
@@ -245,6 +243,11 @@ export class Game {
     // Oxygen depleted -> overlay effect
     this.eventBus.on('OXYGEN_DEPLETED', () => {
       this.overlayEffect.setDepleted(true);
+    });
+
+    // Oxygen tank collected -> restore oxygen
+    this.eventBus.on('OXYGEN_TANK_COLLECTED', (event) => {
+      this.oxygenController.addOxygen(event.amount);
     });
   }
 

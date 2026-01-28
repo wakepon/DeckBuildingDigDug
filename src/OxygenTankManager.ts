@@ -1,5 +1,6 @@
 import { Container } from 'pixi.js';
 import { OxygenTank } from './OxygenTank';
+import { EventBus } from './EventBus';
 import {
   OXYGEN_TANK_SPAWN_CHANCE,
   OXYGEN_TANK_RESTORE,
@@ -13,14 +14,11 @@ import {
 export class OxygenTankManager {
   public container: Container;
   private tanks: OxygenTank[] = [];
-  private onOxygenCollected: ((amount: number) => void) | null = null;
+  private eventBus: EventBus;
 
-  constructor() {
+  constructor(eventBus: EventBus) {
+    this.eventBus = eventBus;
     this.container = new Container();
-  }
-
-  setOnOxygenCollected(callback: (amount: number) => void): void {
-    this.onOxygenCollected = callback;
   }
 
   // Called at floor start to place tanks in safe zone
@@ -70,9 +68,9 @@ export class OxygenTankManager {
       const collected = tank.update(deltaTime, playerX, playerY);
 
       if (collected || !tank.active) {
-        if (tank.collected && this.onOxygenCollected) {
+        if (tank.collected) {
           const amount = OXYGEN_MAX * OXYGEN_TANK_RESTORE;
-          this.onOxygenCollected(amount);
+          this.eventBus.emit({ type: 'OXYGEN_TANK_COLLECTED', amount });
         }
         this.container.removeChild(tank.graphics);
         tank.destroy();

@@ -78,18 +78,16 @@ describe('GemManager EventBus Integration', () => {
   beforeEach(() => {
     eventBus = new EventBus();
     playerStats = new PlayerStats();
-    gemManager = new GemManager(playerStats);
-    gemManager.setEventBus(eventBus);
+    gemManager = new GemManager(playerStats, eventBus);
     gemManager.setExpValue(10);
   });
 
-  describe('setEventBus', () => {
-    it('should accept an EventBus instance', () => {
-      const manager = new GemManager(playerStats);
+  describe('constructor with EventBus', () => {
+    it('should accept an EventBus instance in constructor', () => {
       const bus = new EventBus();
 
       // Should not throw
-      expect(() => manager.setEventBus(bus)).not.toThrow();
+      expect(() => new GemManager(playerStats, bus)).not.toThrow();
     });
   });
 
@@ -149,56 +147,5 @@ describe('GemManager EventBus Integration', () => {
       expect(events).toHaveLength(2);
     });
 
-    it('should not emit event when no EventBus is set', () => {
-      const manager = new GemManager(playerStats);
-      manager.setExpValue(10);
-
-      // Should not throw even without EventBus
-      manager.spawnGem(100, 100);
-      expect(() => manager.update(0.016, 100, 100)).not.toThrow();
-    });
-  });
-
-  describe('backward compatibility', () => {
-    it('should still work with old callback pattern', () => {
-      const manager = new GemManager(playerStats);
-      let callbackExp = 0;
-
-      manager.setOnExpGained((exp) => {
-        callbackExp = exp;
-      });
-      manager.setExpValue(15);
-
-      // Spawn and collect gem
-      manager.spawnGem(100, 100);
-      manager.update(0.016, 100, 100);
-
-      expect(callbackExp).toBe(15);
-    });
-
-    it('should emit events AND call callbacks when both are set', () => {
-      const manager = new GemManager(playerStats);
-      const bus = new EventBus();
-      manager.setEventBus(bus);
-      manager.setExpValue(20);
-
-      let callbackExp = 0;
-      let eventExp = 0;
-
-      manager.setOnExpGained((exp) => {
-        callbackExp = exp;
-      });
-
-      bus.on('GEM_COLLECTED', (event) => {
-        eventExp = event.exp;
-      });
-
-      // Spawn and collect gem
-      manager.spawnGem(100, 100);
-      manager.update(0.016, 100, 100);
-
-      expect(callbackExp).toBe(20);
-      expect(eventExp).toBe(20);
-    });
   });
 });

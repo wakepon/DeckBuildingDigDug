@@ -257,7 +257,7 @@ export class BulletManager {
     const bullet = this.bullets[index];
     this.container.removeChild(bullet.graphics);
     bullet.destroy();
-    this.bullets.splice(index, 1);
+    this.bullets = this.bullets.filter((_, idx) => idx !== index);
   }
 
   clear(): void {

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ENEMY_HP, ELITE_HP_MULTIPLIER } from '../constants';
+import { EventBus } from '../EventBus';
 
 // Mock PIXI.js
 vi.mock('pixi.js', () => {
@@ -41,9 +42,11 @@ import { EnemyManager } from '../EnemyManager';
 
 describe('EnemyManager HP initialization', () => {
   let enemyManager: EnemyManager;
+  let eventBus: EventBus;
 
   beforeEach(() => {
-    enemyManager = new EnemyManager();
+    eventBus = new EventBus();
+    enemyManager = new EnemyManager(eventBus);
   });
 
   describe('Default enemy HP', () => {
