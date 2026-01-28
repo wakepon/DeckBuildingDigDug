@@ -110,17 +110,21 @@ export class DebugWindow {
     nameText.y = 5;
     row.addChild(nameText);
 
-    // Level display
+    // Level display with max level indicator
+    const currentLevel = this.playerStats.getUpgradeCount(type);
+    const maxLevel = info.maxLevel;
+    const isMaxed = this.playerStats.isUpgradeMaxed(type);
+    const levelDisplayText = isMaxed ? `Lv.${currentLevel} MAX` : `Lv.${currentLevel}/${maxLevel}`;
     const levelText = new Text({
-      text: `Lv.${this.playerStats.getUpgradeCount(type)}`,
+      text: levelDisplayText,
       style: {
         fontFamily: 'Arial',
         fontSize: 14,
         fontWeight: 'bold',
-        fill: 0x88ff88,
+        fill: isMaxed ? 0xffdd00 : 0x88ff88,
       },
     });
-    levelText.x = this.WINDOW_WIDTH - this.PADDING - 100;
+    levelText.x = this.WINDOW_WIDTH - this.PADDING - 110;
     levelText.y = 4;
     row.addChild(levelText);
 
@@ -204,10 +208,15 @@ export class DebugWindow {
     this.onStatsChangedCallback = callback;
   }
 
-  incrementUpgrade(type: UpgradeType): void {
+  incrementUpgrade(type: UpgradeType): boolean {
+    // Check if upgrade is already at max level
+    if (this.playerStats.isUpgradeMaxed(type)) {
+      return false;
+    }
     this.playerStats.applyUpgrade(type);
     this.updateDisplay();
     this.notifyStatsChanged();
+    return true;
   }
 
   decrementUpgrade(type: UpgradeType): boolean {
@@ -237,7 +246,12 @@ export class DebugWindow {
     for (const row of this.upgradeRows) {
       const typedRow = row as Container & { levelText?: Text; upgradeType?: UpgradeType };
       if (typedRow.levelText && typedRow.upgradeType) {
-        typedRow.levelText.text = `Lv.${this.playerStats.getUpgradeCount(typedRow.upgradeType)}`;
+        const type = typedRow.upgradeType;
+        const currentLevel = this.playerStats.getUpgradeCount(type);
+        const maxLevel = UPGRADE_DATA[type].maxLevel;
+        const isMaxed = this.playerStats.isUpgradeMaxed(type);
+        typedRow.levelText.text = isMaxed ? `Lv.${currentLevel} MAX` : `Lv.${currentLevel}/${maxLevel}`;
+        typedRow.levelText.style.fill = isMaxed ? 0xffdd00 : 0x88ff88;
       }
     }
   }

@@ -78,14 +78,21 @@ export class UpgradeSystem {
     // Clear previous cards
     this.clearCards();
 
-    // Get random upgrades
+    // Get random upgrades (filtered by max level)
     this.currentChoices = this.playerStats.getRandomUpgrades(UPGRADE_CHOICES);
+
+    // Handle case when no upgrades are available (all maxed)
+    if (this.currentChoices.length === 0) {
+      this.showAllMaxedMessage();
+      return;
+    }
 
     // Create upgrade cards
     const cardWidth = 180;
     const cardHeight = 220;
     const cardSpacing = 30;
-    const totalWidth = UPGRADE_CHOICES * cardWidth + (UPGRADE_CHOICES - 1) * cardSpacing;
+    const actualChoices = this.currentChoices.length;
+    const totalWidth = actualChoices * cardWidth + (actualChoices - 1) * cardSpacing;
     const startX = (SCREEN_WIDTH - totalWidth) / 2;
 
     for (let i = 0; i < this.currentChoices.length; i++) {
@@ -96,6 +103,58 @@ export class UpgradeSystem {
       this.container.addChild(card);
       this.upgradeCards.push(card);
     }
+  }
+
+  private showAllMaxedMessage(): void {
+    // Show message that all upgrades are maxed
+    const messageText = new Text({
+      text: '全てのアップグレードが最大レベルです!',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 24,
+        fontWeight: 'bold',
+        fill: 0xffdd00,
+      },
+    });
+    messageText.anchor.set(0.5, 0.5);
+    messageText.x = SCREEN_WIDTH / 2;
+    messageText.y = SCREEN_HEIGHT / 2;
+    this.container.addChild(messageText);
+
+    // Create a continue button
+    const button = new Container();
+    const buttonBg = new Graphics();
+    buttonBg.roundRect(0, 0, 160, 50, 8);
+    buttonBg.fill(0x44ff44);
+    button.addChild(buttonBg);
+
+    const buttonText = new Text({
+      text: '続ける',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 20,
+        fontWeight: 'bold',
+        fill: 0x000000,
+      },
+    });
+    buttonText.anchor.set(0.5, 0.5);
+    buttonText.x = 80;
+    buttonText.y = 25;
+    button.addChild(buttonText);
+
+    button.x = SCREEN_WIDTH / 2 - 80;
+    button.y = SCREEN_HEIGHT / 2 + 50;
+    button.eventMode = 'static';
+    button.cursor = 'pointer';
+    button.on('pointerdown', () => {
+      this.container.removeChild(messageText);
+      this.container.removeChild(button);
+      messageText.destroy();
+      button.destroy({ children: true });
+      this.showNextUpgrade();
+    });
+
+    this.container.addChild(button);
   }
 
   private createUpgradeCard(type: UpgradeType, width: number, height: number): Container {
@@ -160,21 +219,21 @@ export class UpgradeSystem {
     descText.y = 130;
     card.addChild(descText);
 
-    // Current count
-    if (count > 0) {
-      const countText = new Text({
-        text: `所持: ${count}`,
-        style: {
-          fontFamily: 'Arial',
-          fontSize: 12,
-          fill: 0x888888,
-        },
-      });
-      countText.anchor.set(0.5, 0);
-      countText.x = width / 2;
-      countText.y = 155;
-      card.addChild(countText);
-    }
+    // Level display showing progress toward max
+    const maxLevel = info.maxLevel;
+    const levelDisplayText = `Lv.${count} / ${maxLevel}`;
+    const levelText = new Text({
+      text: levelDisplayText,
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 12,
+        fill: count === 0 ? 0x666666 : 0x88ff88,
+      },
+    });
+    levelText.anchor.set(0.5, 0);
+    levelText.x = width / 2;
+    levelText.y = 155;
+    card.addChild(levelText);
 
     // Select button
     const button = new Graphics();

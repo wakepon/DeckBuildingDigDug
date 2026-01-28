@@ -36,6 +36,7 @@ export interface UpgradeInfo {
   description: string;
   icon: string;
   color: number;
+  maxLevel: number;
 }
 
 export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
@@ -45,6 +46,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: 'ダメージ+20%',
     icon: '⚔',
     color: 0xff4444,
+    maxLevel: 10,
   },
   attackSpeed: {
     type: 'attackSpeed',
@@ -52,6 +54,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: '連射速度+15%',
     icon: '⚡',
     color: 0xffff00,
+    maxLevel: 8,
   },
   bulletSize: {
     type: 'bulletSize',
@@ -59,6 +62,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: '弾の大きさ+25%',
     icon: '●',
     color: 0x44ff44,
+    maxLevel: 5,
   },
   moveSpeed: {
     type: 'moveSpeed',
@@ -66,6 +70,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: '移動速度+10%',
     icon: '→',
     color: 0x44ffff,
+    maxLevel: 10,
   },
   maxHp: {
     type: 'maxHp',
@@ -73,6 +78,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: 'HP上限+20',
     icon: '♥',
     color: 0xff88aa,
+    maxLevel: 10,
   },
   oxygenReduction: {
     type: 'oxygenReduction',
@@ -80,6 +86,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: '酸素消費-10%',
     icon: '○',
     color: 0x88ccff,
+    maxLevel: 9,
   },
   penetration: {
     type: 'penetration',
@@ -87,6 +94,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: '壁を2枚貫通',
     icon: '»',
     color: 0xffaa00,
+    maxLevel: 3,
   },
   gemAttract: {
     type: 'gemAttract',
@@ -94,6 +102,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: '吸引範囲+50%',
     icon: '◆',
     color: 0x00ffff,
+    maxLevel: 5,
   },
   multiWayShot: {
     type: 'multiWayShot',
@@ -101,6 +110,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: '弾の発射方向+1',
     icon: '∴',
     color: 0xff88ff,
+    maxLevel: 5,
   },
   bounce: {
     type: 'bounce',
@@ -108,6 +118,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: '壁で1回反射',
     icon: '↩',
     color: 0x44ff88,
+    maxLevel: 5,
   },
 };
 
@@ -251,11 +262,29 @@ export class PlayerStats {
     return Object.keys(UPGRADE_DATA) as UpgradeType[];
   }
 
-  // Get random upgrades for selection
-  getRandomUpgrades(count: number): UpgradeType[] {
+  // Get max level for a specific upgrade type
+  static getUpgradeMaxLevel(type: UpgradeType): number {
+    return UPGRADE_DATA[type].maxLevel;
+  }
+
+  // Check if an upgrade has reached its max level
+  isUpgradeMaxed(type: UpgradeType): boolean {
+    const currentLevel = this.getUpgradeCount(type);
+    const maxLevel = UPGRADE_DATA[type].maxLevel;
+    return currentLevel >= maxLevel;
+  }
+
+  // Get all upgrades that are not yet maxed
+  getAvailableUpgrades(): UpgradeType[] {
     const allTypes = PlayerStats.getAllUpgradeTypes();
-    const shuffled = [...allTypes].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
+    return allTypes.filter(type => !this.isUpgradeMaxed(type));
+  }
+
+  // Get random upgrades for selection (excluding maxed upgrades)
+  getRandomUpgrades(count: number): UpgradeType[] {
+    const availableTypes = this.getAvailableUpgrades();
+    const shuffled = [...availableTypes].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(count, availableTypes.length));
   }
 
   // Remove an upgrade (for debug purposes)

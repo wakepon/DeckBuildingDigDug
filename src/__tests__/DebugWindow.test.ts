@@ -249,4 +249,48 @@ describe('DebugWindow', () => {
       expect(() => debugWindow.destroy()).not.toThrow();
     });
   });
+
+  describe('max level functionality', () => {
+    it('should not increment upgrade beyond max level', () => {
+      // penetration has maxLevel 3
+      debugWindow.incrementUpgrade('penetration');
+      debugWindow.incrementUpgrade('penetration');
+      debugWindow.incrementUpgrade('penetration');
+      expect(playerStats.getUpgradeCount('penetration')).toBe(3);
+      expect(playerStats.isUpgradeMaxed('penetration')).toBe(true);
+
+      // Try to increment beyond max
+      const result = debugWindow.incrementUpgrade('penetration');
+      expect(result).toBe(false);
+      expect(playerStats.getUpgradeCount('penetration')).toBe(3);
+    });
+
+    it('should return false when trying to increment maxed upgrade', () => {
+      // Max out penetration
+      for (let i = 0; i < 3; i++) {
+        debugWindow.incrementUpgrade('penetration');
+      }
+
+      const result = debugWindow.incrementUpgrade('penetration');
+      expect(result).toBe(false);
+    });
+
+    it('should return true when incrementing non-maxed upgrade', () => {
+      const result = debugWindow.incrementUpgrade('attackPower');
+      expect(result).toBe(true);
+    });
+
+    it('should not call callback when increment fails due to max level', () => {
+      // Max out penetration
+      for (let i = 0; i < 3; i++) {
+        playerStats.applyUpgrade('penetration');
+      }
+
+      const callback = vi.fn();
+      debugWindow.setOnStatsChanged(callback);
+
+      debugWindow.incrementUpgrade('penetration');
+      expect(callback).not.toHaveBeenCalled();
+    });
+  });
 });
