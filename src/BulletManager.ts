@@ -87,8 +87,9 @@ export class BulletManager {
         // Get wall color before damaging
         const wallColor = this.wallManager.getWallColor(gridX, gridY);
 
-        // Damage wall
-        const destroyed = this.wallManager.damageWall(gridX, gridY, 1);
+        // Damage wall using attack power (floor value for integer damage)
+        const wallDamage = Math.floor(this.playerStats.attackPower);
+        const destroyed = this.wallManager.damageWall(gridX, gridY, wallDamage);
 
         if (destroyed && this.onWallDestroyed && wallColor !== null) {
           // Trigger particle effect at wall center

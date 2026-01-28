@@ -74,8 +74,8 @@ export class Game {
     // Initialize floor manager
     this.floorManager = new FloorManager();
 
-    // Initialize wall manager
-    this.wallManager = new WallManager();
+    // Initialize wall manager with floor manager for HP scaling
+    this.wallManager = new WallManager(this.floorManager);
 
     // Initialize stairs
     const stairsPos = this.wallManager.stairsPosition;

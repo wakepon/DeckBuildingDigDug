@@ -16,6 +16,31 @@ export const WALL_COLORS: Record<number, number> = {
   1: 0x8B4513,  // Light brown - weak wall
   2: 0x654321,  // Medium brown - medium wall
   3: 0x3D2914,  // Dark brown - strong wall
+  4: 0x4A5568,  // Gray - reinforced wall
+  5: 0x2D3748,  // Dark gray - steel wall
+  6: 0x1A365D,  // Dark blue - iron wall
+  7: 0x553C9A,  // Purple - hardened wall
+  8: 0x702459,  // Dark magenta - fortified wall
+  9: 0x7B341E,  // Dark red-brown - bedrock wall
+  10: 0x1A1A2E, // Near black - obsidian wall
+};
+
+// Wall HP scaling constants
+export const WALL_HP_SCALING = {
+  MIN_HP: 1,
+  MAX_HP: 10,
+  BASE_MAX_HP: 3,           // Base max HP on floors 1-4
+  HP4_VALUE: 4,             // Starting HP value at floor 5
+  HP4_FLOOR_THRESHOLD: 5,   // HP 4+ walls start appearing at floor 5
+  HP10_FLOOR_THRESHOLD: 10, // HP 10 walls available by floor 10
+  HP_SCALING_NUMERATOR: 6,  // HP scaling numerator (6 HP levels)
+  HP_SCALING_DENOMINATOR: 5, // HP scaling denominator (5 floor increments)
+  HP1_BASE_WEIGHT: 50,      // HP 1 has 50% base weight on floor 1
+  HP1_WEIGHT_REDUCTION_PER_FLOOR: 3, // HP 1 weight reduction per floor
+  HP1_MAX_WEIGHT_REDUCTION: 30,      // Maximum HP 1 weight reduction
+  HIGH_HP_THRESHOLD: 3,     // HP threshold for floor bonus
+  HIGH_HP_FLOOR_BONUS: 0.5, // Floor bonus for high HP walls
+  MIN_WEIGHT: 1,            // Minimum weight for any HP level
 };
 
 // Player spawn area (3x3 in center)

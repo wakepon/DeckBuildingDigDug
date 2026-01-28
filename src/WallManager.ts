@@ -4,11 +4,13 @@ import {
   GRID_ROWS,
   TILE_SIZE,
   WALL_COLORS,
+  WALL_HP_SCALING,
   PLAYER_SPAWN_CENTER_X,
   PLAYER_SPAWN_CENTER_Y,
   PLAYER_SPAWN_RADIUS,
   STAIRS_MIN_DISTANCE,
 } from './constants';
+import { FloorManager } from './FloorManager';
 
 interface Wall {
   hp: number;
@@ -19,10 +21,12 @@ export class WallManager {
   public container: Container;
   private walls: (Wall | null)[][];
   private _stairsPosition: { x: number; y: number } = { x: 0, y: 0 };
+  private floorManager: FloorManager | null = null;
 
-  constructor() {
+  constructor(floorManager?: FloorManager) {
     this.container = new Container();
     this.walls = [];
+    this.floorManager = floorManager || null;
     this.initializeWalls();
   }
 
@@ -39,8 +43,8 @@ export class WallManager {
           continue;
         }
 
-        // Create wall with random HP (1-3)
-        const hp = Math.floor(Math.random() * 3) + 1;
+        // Create wall with HP based on floor distribution
+        const hp = this.generateWallHP();
         const wall = this.createWall(x, y, hp);
         this.walls[y][x] = wall;
       }
@@ -81,6 +85,15 @@ export class WallManager {
     return dx <= PLAYER_SPAWN_RADIUS && dy <= PLAYER_SPAWN_RADIUS;
   }
 
+  private clampHP(hp: number): number {
+    return Math.max(WALL_HP_SCALING.MIN_HP, Math.min(WALL_HP_SCALING.MAX_HP, Math.floor(hp)));
+  }
+
+  private getWallColorForHP(hp: number): number {
+    const clampedHP = this.clampHP(hp);
+    return WALL_COLORS[clampedHP] ?? WALL_COLORS[WALL_HP_SCALING.MIN_HP];
+  }
+
   private createWall(gridX: number, gridY: number, hp: number): Wall {
     const graphics = new Graphics();
     this.drawWall(graphics, hp);
@@ -94,7 +107,7 @@ export class WallManager {
   }
 
   private drawWall(graphics: Graphics, hp: number): void {
-    const color = WALL_COLORS[hp] || WALL_COLORS[1];
+    const color = this.getWallColorForHP(hp);
     const padding = 1;
 
     graphics.clear();
@@ -124,24 +137,26 @@ export class WallManager {
   public getWallColor(x: number, y: number): number | null {
     const wall = this.getWall(x, y);
     if (!wall) return null;
-    return WALL_COLORS[wall.hp] || WALL_COLORS[1];
+    return this.getWallColorForHP(wall.hp);
   }
 
   public damageWall(x: number, y: number, damage: number): boolean {
     const wall = this.getWall(x, y);
     if (!wall) return false;
 
-    wall.hp -= damage;
+    const newHp = wall.hp - damage;
 
-    if (wall.hp <= 0) {
+    if (newHp <= 0) {
       // Destroy wall
       this.container.removeChild(wall.graphics);
       wall.graphics.destroy();
       this.walls[y][x] = null;
       return true; // Wall destroyed
     } else {
-      // Update wall appearance
-      this.drawWall(wall.graphics, wall.hp);
+      // Update wall appearance with new HP
+      this.drawWall(wall.graphics, newHp);
+      // Update wall object immutably
+      this.walls[y][x] = { hp: newHp, graphics: wall.graphics };
       return false; // Wall damaged but not destroyed
     }
   }
@@ -173,5 +188,17 @@ export class WallManager {
 
   public update(): void {
     // Future: Add wall animations, effects, etc.
+  }
+
+  private generateWallHP(): number {
+    if (this.floorManager) {
+      return this.floorManager.generateWallHP();
+    }
+    // Fallback to original behavior (HP 1-3)
+    return Math.floor(Math.random() * 3) + 1;
+  }
+
+  public setFloorManager(floorManager: FloorManager): void {
+    this.floorManager = floorManager;
   }
 }
