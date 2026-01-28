@@ -86,16 +86,9 @@ export class BulletManager {
     this.fireCooldown -= deltaTime;
 
     if (this.fireCooldown <= 0) {
-      // Auto-aim: fire automatically when enabled
-      if (this.playerStats.autoAimEnabled) {
-        this.fire(cameraX, cameraY);
-        this.fireCooldown = this.playerStats.fireRate;
-      }
-      // Manual aim: fire when mouse is down
-      else if (this.inputManager.isMouseDown) {
-        this.fire(cameraX, cameraY);
-        this.fireCooldown = this.playerStats.fireRate;
-      }
+      // Always fire automatically (no mouse click required)
+      this.fire(cameraX, cameraY);
+      this.fireCooldown = this.playerStats.fireRate;
     }
 
     // Update bullets
@@ -269,36 +262,36 @@ export class BulletManager {
 
     // Check if auto-aim should be used
     if (this.autoAimSystem && this.playerStats.autoAimEnabled) {
-      // Use movement direction for auto-aim targeting
-      const moveDir = this.inputManager.moveDirection;
+      // Use mouse direction for auto-aim targeting
+      const mouseDir = this.inputManager.getMouseDirection(
+        this.player.x,
+        this.player.y,
+        cameraX,
+        cameraY
+      );
 
-      // If not moving, use last movement direction
-      const aimMoveX = moveDir.x !== 0 || moveDir.y !== 0
-        ? moveDir.x
-        : this.inputManager.lastMoveDirection.x;
-      const aimMoveY = moveDir.x !== 0 || moveDir.y !== 0
-        ? moveDir.y
-        : this.inputManager.lastMoveDirection.y;
+      // If no mouse direction (mouse at player position), don't fire
+      if (mouseDir.x === 0 && mouseDir.y === 0) return;
 
-      // Get targets and find best aim direction
+      // Get targets and find best aim direction using mouse direction as reference
       const targets = this.getTargets();
       const aimDir = this.autoAimSystem.getAimDirection(
         this.player.x,
         this.player.y,
-        aimMoveX,
-        aimMoveY,
+        mouseDir.x,
+        mouseDir.y,
         targets
       );
 
       dirX = aimDir.x;
       dirY = aimDir.y;
 
-      // If no direction (player not moving and no target), don't fire
+      // If no direction (no target and no mouse direction), don't fire
       if (dirX === 0 && dirY === 0) return;
     } else {
       // Manual aiming: Calculate direction from player to mouse (in world coordinates)
-      const mouseWorldX = this.inputManager.mouseX - cameraX;
-      const mouseWorldY = this.inputManager.mouseY - cameraY;
+      const mouseWorldX = this.inputManager.mouseX + cameraX;
+      const mouseWorldY = this.inputManager.mouseY + cameraY;
 
       dirX = mouseWorldX - this.player.x;
       dirY = mouseWorldY - this.player.y;
