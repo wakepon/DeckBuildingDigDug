@@ -5,6 +5,7 @@ import { InputManager } from './InputManager';
 import { Player } from './Player';
 import { EnemyManager } from './EnemyManager';
 import { PlayerStats } from './PlayerStats';
+import { EventBus } from './EventBus';
 import { calculateMultiWayShotDirections } from './multiWayShotUtils';
 import { determineWallNormal } from './bounceUtils';
 import {
@@ -21,29 +22,27 @@ export class BulletManager {
   private inputManager: InputManager;
   private player: Player;
   private playerStats: PlayerStats;
+  private eventBus: EventBus;
   private enemyManager: EnemyManager | null = null;
   private fireCooldown: number = 0;
-  private onWallDestroyed: ((x: number, y: number, color: number) => void) | null = null;
 
   constructor(
     wallManager: WallManager,
     inputManager: InputManager,
     player: Player,
-    playerStats: PlayerStats
+    playerStats: PlayerStats,
+    eventBus: EventBus
   ) {
     this.wallManager = wallManager;
     this.inputManager = inputManager;
     this.player = player;
     this.playerStats = playerStats;
+    this.eventBus = eventBus;
     this.container = new Container();
   }
 
   setEnemyManager(enemyManager: EnemyManager): void {
     this.enemyManager = enemyManager;
-  }
-
-  setOnWallDestroyed(callback: (x: number, y: number, color: number) => void): void {
-    this.onWallDestroyed = callback;
   }
 
   update(deltaTime: number, cameraX: number, cameraY: number): void {
@@ -91,11 +90,11 @@ export class BulletManager {
         ));
         const destroyed = this.wallManager.damageWall(gridX, gridY, wallDamage);
 
-        if (destroyed && this.onWallDestroyed && wallColor !== null) {
-          // Trigger particle effect at wall center
+        if (destroyed && wallColor !== null) {
+          // Emit wall destroyed event
           const centerX = (gridX + 0.5) * TILE_SIZE;
           const centerY = (gridY + 0.5) * TILE_SIZE;
-          this.onWallDestroyed(centerX, centerY, wallColor);
+          this.eventBus.emit({ type: 'WALL_DESTROYED', x: centerX, y: centerY, color: wallColor });
         }
 
         // Check penetration first

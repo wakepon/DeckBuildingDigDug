@@ -164,6 +164,7 @@ export const MULTI_WAY_SHOT_BULLET_COUNTS: Record<number, number> = {
 export const ELITE_SPAWN_CHANCE = 0.01; // 1% chance on wall break
 export const ELITE_HP_MULTIPLIER = 5;
 export const ELITE_SIZE_MULTIPLIER = 1.8;
+export const ELITE_SPEED_MULTIPLIER = 0.7; // 70% speed of normal enemy
 export const ELITE_COLOR = 0xff00ff; // Magenta
 
 // Treasure chest settings

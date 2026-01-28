@@ -4,6 +4,7 @@ import {
   ENEMY_HP,
   ELITE_HP_MULTIPLIER,
   ELITE_SIZE_MULTIPLIER,
+  ELITE_SPEED_MULTIPLIER,
   ELITE_COLOR,
 } from './constants';
 import { BaseEnemy } from './BaseEnemy';
@@ -23,7 +24,7 @@ export class EliteEnemy extends BaseEnemy {
   }
 
   protected getSpeed(): number {
-    return ENEMY_SPEED * 0.7; // 70% speed of normal enemy
+    return ENEMY_SPEED * ELITE_SPEED_MULTIPLIER;
   }
 
   update(deltaTime: number, playerX: number, playerY: number): void {

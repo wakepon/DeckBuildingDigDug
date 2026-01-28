@@ -1,4 +1,5 @@
 import { Graphics } from 'pixi.js';
+import { getDistance } from './utils/math';
 
 /**
  * BaseEnemy - Abstract base class for all enemy types
@@ -51,15 +52,6 @@ export abstract class BaseEnemy {
   }
 
   /**
-   * Calculate distance to a point
-   */
-  protected getDistance(x: number, y: number): number {
-    const dx = x - this.x;
-    const dy = y - this.y;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  /**
    * Update enemy behavior
    * Common logic: move towards player, update hit flash
    */
@@ -70,7 +62,7 @@ export abstract class BaseEnemy {
     // Move towards player
     const dx = playerX - this.x;
     const dy = playerY - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = getDistance(this.x, this.y, playerX, playerY);
 
     if (dist > 1) {
       const speed = this.getSpeed();

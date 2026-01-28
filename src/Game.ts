@@ -1,4 +1,5 @@
 import { Application, Container } from 'pixi.js';
+import { EventBus } from './EventBus';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT, TILE_SIZE, PLAYER_SPAWN_CENTER_X, PLAYER_SPAWN_CENTER_Y, ELITE_COLOR } from './constants';
 import { WallManager } from './WallManager';
 import { InputManager } from './InputManager';
@@ -22,6 +23,7 @@ import { DebugWindow } from './DebugWindow';
 export class Game {
   private app: Application;
   private gameContainer: Container;
+  private eventBus: EventBus;
   private wallManager!: WallManager;
   private inputManager!: InputManager;
   private player!: Player;
@@ -46,6 +48,7 @@ export class Game {
   constructor() {
     this.app = new Application();
     this.gameContainer = new Container();
+    this.eventBus = new EventBus();
   }
 
   async init(): Promise<void> {
@@ -89,7 +92,8 @@ export class Game {
       this.wallManager,
       this.inputManager,
       this.player,
-      this.playerStats
+      this.playerStats,
+      this.eventBus
     );
 
     // Initialize particle manager
@@ -136,89 +140,8 @@ export class Game {
     // Connect managers
     this.bulletManager.setEnemyManager(this.enemyManager);
 
-    // Wall destruction -> particles + enemy spawn + oxygen tank spawn + stairs reveal
-    this.bulletManager.setOnWallDestroyed((x, y, color) => {
-      this.particleManager.emit(x, y, color);
-      this.enemyManager.onWallDestroyed(x, y);
-
-      // Spawn oxygen tank with chance
-      this.oxygenTankManager.onWallDestroyed(x, y);
-
-      // Check if stairs should be revealed
-      const gridX = Math.floor(x / TILE_SIZE);
-      const gridY = Math.floor(y / TILE_SIZE);
-      if (this.wallManager.isStairsPosition(gridX, gridY)) {
-        this.stairs.reveal();
-        this.particleManager.emit(x, y, 0xffdd00); // Golden particles
-      }
-    });
-
-    // Enemy death -> gem spawn + death particles
-    this.enemyManager.setOnEnemyDeath((x, y) => {
-      this.gemManager.spawnGem(x, y);
-      this.particleManager.emit(x, y, 0xff4444); // Red particles for enemy death
-    });
-
-    // Elite enemy death -> gems + purple particles
-    this.enemyManager.setOnEliteDeath((x, y) => {
-      // Spawn multiple gems for elite
-      for (let i = 0; i < 5; i++) {
-        const offsetX = (Math.random() - 0.5) * 40;
-        const offsetY = (Math.random() - 0.5) * 40;
-        this.gemManager.spawnGem(x + offsetX, y + offsetY);
-      }
-      this.particleManager.emit(x, y, ELITE_COLOR); // Purple particles
-    });
-
-    // Treasure chest collected -> trigger upgrades
-    this.enemyManager.setOnChestCollected((upgradeCount) => {
-      this.particleManager.emit(this.player.x, this.player.y, 0xffd700); // Gold particles
-      this.showUpgradeSelection(upgradeCount);
-    });
-
-    // Enemy damages player
-    this.enemyManager.setOnPlayerDamage((damage) => {
-      this.player.takeDamage(damage);
-    });
-
-    // Gem collected -> add exp and check level up
-    this.gemManager.setOnExpGained((exp) => {
-      const leveledUp = this.playerStats.addExp(exp);
-      if (leveledUp) {
-        this.showUpgradeSelection(1);
-      }
-    });
-
-    // Upgrade selected callback
-    this.upgradeSystem.setOnUpgradeSelected((type) => {
-      // Handle special upgrade effects
-      if (type === 'maxHp') {
-        // Heal the amount of HP gained
-        const oldMaxHp = this.playerStats.maxHp - 20; // UPGRADE_MAX_HP
-        this.player.onMaxHpIncrease(oldMaxHp);
-      }
-      // Update stats display
-      this.statsDisplay.updateDisplay();
-    });
-
-    // Oxygen tank collected -> restore oxygen
-    this.oxygenTankManager.setOnOxygenCollected((amount) => {
-      this.oxygenController.addOxygen(amount);
-      this.particleManager.emit(this.player.x, this.player.y, 0x44aaff); // Blue particles
-    });
-
-    // Oxygen callbacks
-    this.oxygenController.setOnDamage((damage) => {
-      this.player.takeSlipDamage(damage);
-    });
-
-    this.oxygenController.setOnWarning((isWarning) => {
-      this.overlayEffect.setWarning(isWarning);
-    });
-
-    this.oxygenController.setOnDepleted((isDepleted) => {
-      this.overlayEffect.setDepleted(isDepleted);
-    });
+    // Setup EventBus listeners
+    this.setupEventListeners();
 
     // Initial oxygen tanks in safe zone
     this.oxygenTankManager.spawnInitialTanks();
@@ -243,6 +166,68 @@ export class Game {
 
     // Start game loop
     this.app.ticker.add(this.update.bind(this));
+  }
+
+  private setupEventListeners(): void {
+    // Wall destruction -> particles + enemy spawn + oxygen tank spawn + stairs reveal
+    this.eventBus.on('WALL_DESTROYED', (event) => {
+      this.particleManager.emit(event.x, event.y, event.color);
+      this.enemyManager.onWallDestroyed(event.x, event.y);
+      this.oxygenTankManager.onWallDestroyed(event.x, event.y);
+
+      // Check if stairs should be revealed
+      const gridX = Math.floor(event.x / TILE_SIZE);
+      const gridY = Math.floor(event.y / TILE_SIZE);
+      if (this.wallManager.isStairsPosition(gridX, gridY)) {
+        this.stairs.reveal();
+        this.particleManager.emit(event.x, event.y, 0xffdd00); // Golden particles
+      }
+    });
+
+    // Enemy death -> gem spawn + death particles
+    this.eventBus.on('ENEMY_DIED', (event) => {
+      this.gemManager.spawnGem(event.x, event.y);
+      this.particleManager.emit(event.x, event.y, 0xff4444); // Red particles for enemy death
+    });
+
+    // Gem collected -> add exp and check level up
+    this.eventBus.on('GEM_COLLECTED', (event) => {
+      const leveledUp = this.playerStats.addExp(event.exp);
+      if (leveledUp) {
+        this.eventBus.emit({ type: 'LEVEL_UP' });
+      }
+    });
+
+    // Level up -> show upgrade selection
+    this.eventBus.on('LEVEL_UP', () => {
+      this.showUpgradeSelection(1);
+    });
+
+    // Upgrade selected -> handle special effects
+    this.eventBus.on('UPGRADE_SELECTED', (event) => {
+      if (event.upgradeType === 'maxHp') {
+        // Heal the amount of HP gained
+        const oldMaxHp = this.playerStats.maxHp - 20; // UPGRADE_MAX_HP
+        this.player.onMaxHpIncrease(oldMaxHp);
+      }
+      // Update stats display
+      this.statsDisplay.updateDisplay();
+    });
+
+    // Player damaged -> take damage
+    this.eventBus.on('PLAYER_DAMAGED', (event) => {
+      this.player.takeDamage(event.damage);
+    });
+
+    // Oxygen warning -> overlay effect
+    this.eventBus.on('OXYGEN_WARNING', (event) => {
+      this.overlayEffect.setWarning(event.ratio < 0.2);
+    });
+
+    // Oxygen depleted -> overlay effect
+    this.eventBus.on('OXYGEN_DEPLETED', () => {
+      this.overlayEffect.setDepleted(true);
+    });
   }
 
   private showUpgradeSelection(count: number): void {

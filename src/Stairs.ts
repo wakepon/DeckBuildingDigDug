@@ -1,4 +1,5 @@
 import { Graphics } from 'pixi.js';
+import { getDistance } from './utils/math';
 import {
   STAIRS_SIZE,
   STAIRS_COLOR,
@@ -87,9 +88,7 @@ export class Stairs {
     const stairsCenterX = (this.gridX + 0.5) * TILE_SIZE;
     const stairsCenterY = (this.gridY + 0.5) * TILE_SIZE;
 
-    const dx = playerX - stairsCenterX;
-    const dy = playerY - stairsCenterY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = getDistance(stairsCenterX, stairsCenterY, playerX, playerY);
 
     return dist < (STAIRS_SIZE / 2 + PLAYER_SIZE / 2);
   }

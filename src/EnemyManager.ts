@@ -2,6 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import { Enemy } from './Enemy';
 import { EliteEnemy } from './EliteEnemy';
 import { TreasureChest } from './TreasureChest';
+import { getDistance } from './utils/math';
 import {
   ENEMY_SPAWN_CHANCE,
   SPAWNER_CHANCE,
@@ -174,9 +175,7 @@ export class EnemyManager {
       }
 
       // Check if player is close enough to disable
-      const dx = playerX - spawner.x;
-      const dy = playerY - spawner.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dist = getDistance(spawner.x, spawner.y, playerX, playerY);
 
       if (dist < SPAWNER_DISABLE_RANGE) {
         spawner.active = false;
@@ -221,9 +220,7 @@ export class EnemyManager {
       enemy.update(deltaTime, playerX, playerY);
 
       // Check collision with player
-      const dx = playerX - enemy.x;
-      const dy = playerY - enemy.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dist = getDistance(enemy.x, enemy.y, playerX, playerY);
       const collisionDist = (PLAYER_SIZE / 2) + (ENEMY_SIZE / 2);
 
       if (dist < collisionDist && this.onPlayerDamage) {
@@ -251,9 +248,7 @@ export class EnemyManager {
       elite.update(deltaTime, playerX, playerY);
 
       // Check collision with player
-      const dx = playerX - elite.x;
-      const dy = playerY - elite.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dist = getDistance(elite.x, elite.y, playerX, playerY);
       const collisionDist = (PLAYER_SIZE / 2) + elite.radius;
 
       if (dist < collisionDist && this.onPlayerDamage) {
@@ -292,9 +287,7 @@ export class EnemyManager {
     for (const enemy of this.enemies) {
       if (!enemy.active) continue;
 
-      const dx = x - enemy.x;
-      const dy = y - enemy.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dist = getDistance(enemy.x, enemy.y, x, y);
 
       if (dist < radius + enemy.radius) {
         enemy.takeDamage(damage);
@@ -306,9 +299,7 @@ export class EnemyManager {
     for (const elite of this.eliteEnemies) {
       if (!elite.active) continue;
 
-      const dx = x - elite.x;
-      const dy = y - elite.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dist = getDistance(elite.x, elite.y, x, y);
 
       if (dist < radius + elite.radius) {
         elite.takeDamage(damage);

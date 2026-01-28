@@ -1,4 +1,5 @@
 import { Graphics } from 'pixi.js';
+import { getDistance } from './utils/math';
 import {
   OXYGEN_TANK_SIZE,
   OXYGEN_TANK_COLOR,
@@ -63,9 +64,7 @@ export class OxygenTank {
     this.graphics.y = this.y + Math.sin(this.time * 2) * 3;
 
     // Check collision with player
-    const dx = playerX - this.x;
-    const dy = playerY - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = getDistance(this.x, this.y, playerX, playerY);
 
     if (dist < (OXYGEN_TANK_SIZE / 2 + PLAYER_SIZE / 2)) {
       this.collected = true;

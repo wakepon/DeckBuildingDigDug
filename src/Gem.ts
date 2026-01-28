@@ -1,4 +1,5 @@
 import { Graphics } from 'pixi.js';
+import { getDistance } from './utils/math';
 import {
   GEM_SIZE,
   GEM_COLOR,
@@ -68,7 +69,7 @@ export class Gem {
   update(deltaTime: number, playerX: number, playerY: number): boolean {
     const dx = playerX - this.x;
     const dy = playerY - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = getDistance(this.x, this.y, playerX, playerY);
 
     // Check if collected
     if (dist < GEM_COLLECT_RANGE) {

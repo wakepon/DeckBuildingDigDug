@@ -1,4 +1,5 @@
 import { Graphics } from 'pixi.js';
+import { getDistance } from './utils/math';
 import {
   CHEST_SIZE,
   CHEST_COLOR,
@@ -92,9 +93,7 @@ export class TreasureChest {
   }
 
   checkCollision(playerX: number, playerY: number): boolean {
-    const dx = playerX - this.x;
-    const dy = playerY - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = getDistance(this.x, this.y, playerX, playerY);
 
     return dist < (CHEST_SIZE / 2 + PLAYER_SIZE / 2);
   }
