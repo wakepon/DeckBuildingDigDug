@@ -1,15 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { PlayerStats, UpgradeType } from '../PlayerStats';
+import { PlayerStats } from '../PlayerStats';
 import {
   UPGRADE_ATTACK_POWER,
-  UPGRADE_ATTACK_SPEED,
-  UPGRADE_BULLET_SIZE,
-  UPGRADE_MOVE_SPEED,
   UPGRADE_MAX_HP,
-  UPGRADE_OXYGEN_REDUCTION,
   UPGRADE_PENETRATION,
-  UPGRADE_GEM_ATTRACT,
-  UPGRADE_MULTI_WAY_SHOT,
 } from '../constants';
 
 describe('PlayerStats.removeUpgrade', () => {

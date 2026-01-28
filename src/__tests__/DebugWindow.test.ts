@@ -216,9 +216,9 @@ describe('DebugWindow', () => {
   });
 
   describe('getAllUpgradeTypes', () => {
-    it('should return all 9 upgrade types', () => {
+    it('should return all 10 upgrade types', () => {
       const types = debugWindow.getAllUpgradeTypes();
-      expect(types).toHaveLength(9);
+      expect(types).toHaveLength(10);
       expect(types).toContain('attackPower');
       expect(types).toContain('attackSpeed');
       expect(types).toContain('bulletSize');
@@ -228,6 +228,7 @@ describe('DebugWindow', () => {
       expect(types).toContain('penetration');
       expect(types).toContain('gemAttract');
       expect(types).toContain('multiWayShot');
+      expect(types).toContain('bounce');
     });
   });
 

@@ -6,11 +6,15 @@ import { Player } from './Player';
 import { EnemyManager } from './EnemyManager';
 import { PlayerStats } from './PlayerStats';
 import { calculateMultiWayShotDirections } from './multiWayShotUtils';
+import { determineWallNormal } from './bounceUtils';
 import {
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
 } from './constants';
+
+// Offset to move bullet away from wall after bounce (in pixels)
+const BOUNCE_OFFSET = 2;
 
 export class BulletManager {
   public container: Container;
@@ -93,25 +97,126 @@ export class BulletManager {
           this.onWallDestroyed(centerX, centerY, wallColor);
         }
 
-        // Check penetration
+        // Check penetration first
         bullet.penetrationRemaining--;
         if (bullet.penetrationRemaining < 0) {
-          // Remove bullet
-          this.removeBullet(i);
-          continue;
+          // No penetration left - check for bounce
+          if (bullet.hasBounce) {
+            // Apply bounce
+            const normal = determineWallNormal({ x: bullet.vx, y: bullet.vy });
+            bullet.applyBounce(normal);
+
+            // Offset bullet position to prevent re-collision
+            this.offsetBulletFromWall(bullet, gridX, gridY, normal);
+          } else {
+            // No bounce left either - remove bullet
+            this.removeBullet(i);
+            continue;
+          }
         }
       }
 
-      // Check out of bounds
-      if (
-        bullet.x < 0 ||
-        bullet.x > GRID_COLS * TILE_SIZE ||
-        bullet.y < 0 ||
-        bullet.y > GRID_ROWS * TILE_SIZE
-      ) {
+      // Check out of bounds - try to bounce off world edges
+      if (this.handleBoundsCollision(bullet)) {
         this.removeBullet(i);
       }
     }
+  }
+
+  /**
+   * Handle collision with world bounds.
+   * Returns true if bullet should be removed.
+   */
+  private handleBoundsCollision(bullet: Bullet): boolean {
+    const worldWidth = GRID_COLS * TILE_SIZE;
+    const worldHeight = GRID_ROWS * TILE_SIZE;
+
+    let hitBounds = false;
+    let normalX = 0;
+    let normalY = 0;
+
+    if (bullet.x < 0) {
+      hitBounds = true;
+      normalX = 1; // Facing right
+    } else if (bullet.x > worldWidth) {
+      hitBounds = true;
+      normalX = -1; // Facing left
+    }
+
+    if (bullet.y < 0) {
+      hitBounds = true;
+      normalY = 1; // Facing down
+    } else if (bullet.y > worldHeight) {
+      hitBounds = true;
+      normalY = -1; // Facing up
+    }
+
+    if (!hitBounds) {
+      return false;
+    }
+
+    // Try to bounce
+    if (bullet.hasBounce) {
+      // Determine which axis to bounce on
+      if (normalX !== 0 && normalY !== 0) {
+        // Corner hit - pick dominant axis based on velocity
+        if (Math.abs(bullet.vx) > Math.abs(bullet.vy)) {
+          normalY = 0;
+        } else {
+          normalX = 0;
+        }
+      }
+
+      bullet.applyBounce({ x: normalX, y: normalY });
+
+      // Clamp position to within bounds
+      if (bullet.x < 0) bullet.setPosition(BOUNCE_OFFSET, bullet.y);
+      if (bullet.x > worldWidth) bullet.setPosition(worldWidth - BOUNCE_OFFSET, bullet.y);
+      if (bullet.y < 0) bullet.setPosition(bullet.x, BOUNCE_OFFSET);
+      if (bullet.y > worldHeight) bullet.setPosition(bullet.x, worldHeight - BOUNCE_OFFSET);
+
+      return false;
+    }
+
+    // No bounce - remove bullet
+    return true;
+  }
+
+  /**
+   * Offset bullet position away from wall to prevent immediate re-collision.
+   */
+  private offsetBulletFromWall(
+    bullet: Bullet,
+    gridX: number,
+    gridY: number,
+    normal: { x: number; y: number }
+  ): void {
+    let newX = bullet.x;
+    let newY = bullet.y;
+
+    if (normal.x !== 0) {
+      // Hit vertical wall
+      if (normal.x < 0) {
+        // Wall is to the right, push bullet to left edge of tile
+        newX = gridX * TILE_SIZE - BOUNCE_OFFSET;
+      } else {
+        // Wall is to the left, push bullet to right edge of tile
+        newX = (gridX + 1) * TILE_SIZE + BOUNCE_OFFSET;
+      }
+    }
+
+    if (normal.y !== 0) {
+      // Hit horizontal wall
+      if (normal.y < 0) {
+        // Wall is below, push bullet to top edge of tile
+        newY = gridY * TILE_SIZE - BOUNCE_OFFSET;
+      } else {
+        // Wall is above, push bullet to bottom edge of tile
+        newY = (gridY + 1) * TILE_SIZE + BOUNCE_OFFSET;
+      }
+    }
+
+    bullet.setPosition(newX, newY);
   }
 
   private fire(cameraX: number, cameraY: number): void {
@@ -140,7 +245,8 @@ export class BulletManager {
         direction.dirX,
         direction.dirY,
         this.playerStats.bulletSize,
-        this.playerStats.penetrationCount
+        this.playerStats.penetrationCount,
+        this.playerStats.bounceCount
       );
       this.bullets.push(bullet);
       this.container.addChild(bullet.graphics);
