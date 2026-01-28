@@ -133,4 +133,42 @@ export class InputManager {
       this._lastMoveDirection = { ...currentDir };
     }
   }
+
+  /**
+   * Calculate normalized direction from player to mouse cursor
+   * @param playerX - Player X position in world coordinates
+   * @param playerY - Player Y position in world coordinates
+   * @param cameraX - Camera X offset (world coordinate of screen origin)
+   * @param cameraY - Camera Y offset (world coordinate of screen origin)
+   * @returns Normalized direction vector {x, y}, or {x: 0, y: 0} if mouse is at player position
+   */
+  getMouseDirection(
+    playerX: number,
+    playerY: number,
+    cameraX: number,
+    cameraY: number
+  ): { x: number; y: number } {
+    // Convert mouse screen coordinates to world coordinates
+    // Mouse world position = mouse screen position + camera offset
+    const mouseWorldX = this._mouseX + cameraX;
+    const mouseWorldY = this._mouseY + cameraY;
+
+    // Calculate vector from player to mouse
+    const dx = mouseWorldX - playerX;
+    const dy = mouseWorldY - playerY;
+
+    // Calculate length
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    // Return zero vector if distance is too small (avoid division by zero)
+    if (length < 0.0001) {
+      return { x: 0, y: 0 };
+    }
+
+    // Return normalized direction
+    return {
+      x: dx / length,
+      y: dy / length,
+    };
+  }
 }

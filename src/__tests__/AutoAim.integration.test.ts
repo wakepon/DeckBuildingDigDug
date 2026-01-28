@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AutoAimSystem, Target, TargetType } from '../AutoAimSystem';
 import { PlayerStats } from '../PlayerStats';
 import { EventBus } from '../EventBus';
+import { InputManager } from '../InputManager';
 
 describe('Auto-aim Integration', () => {
   describe('PlayerStats + AutoAimSystem sync', () => {
@@ -203,6 +204,141 @@ describe('Auto-aim Integration', () => {
 
       const best = autoAimSystem.findBestTarget(100, 100, 1, 0, targets);
       expect(best).not.toBeNull();
+    });
+  });
+
+  describe('Mouse-based auto-aim integration', () => {
+    let inputManager: InputManager;
+    let autoAimSystem: AutoAimSystem;
+    let playerStats: PlayerStats;
+
+    beforeEach(() => {
+      inputManager = new InputManager();
+      autoAimSystem = new AutoAimSystem();
+      playerStats = new PlayerStats();
+      playerStats.setAutoAimEnabled(true);
+      autoAimSystem.setEnabled(true);
+    });
+
+    it('should integrate InputManager.getMouseDirection with AutoAimSystem', () => {
+      // Set mouse position
+      (inputManager as unknown as { _mouseX: number })._mouseX = 300;
+      (inputManager as unknown as { _mouseY: number })._mouseY = 100;
+
+      // Player at (100, 100), camera at (0, 0)
+      const playerX = 100;
+      const playerY = 100;
+      const cameraX = 0;
+      const cameraY = 0;
+
+      // Get mouse direction from InputManager
+      const mouseDir = inputManager.getMouseDirection(playerX, playerY, cameraX, cameraY);
+
+      // Enemy in front of mouse direction
+      const targets: Target[] = [
+        { x: 250, y: 100, type: 'enemy' as TargetType }
+      ];
+
+      // Use mouse direction for auto-aim
+      const aimDir = autoAimSystem.getAimDirection(playerX, playerY, mouseDir.x, mouseDir.y, targets);
+
+      // Should aim at enemy
+      expect(aimDir.x).toBeCloseTo(1);
+      expect(aimDir.y).toBeCloseTo(0);
+    });
+
+    it('should correctly handle camera offset in mouse-based targeting', () => {
+      // Mouse at screen (200, 100)
+      (inputManager as unknown as { _mouseX: number })._mouseX = 200;
+      (inputManager as unknown as { _mouseY: number })._mouseY = 100;
+
+      // Player at (100, 100), camera offset (-100, 0) means camera moved right
+      // Mouse world position = (200 + (-100), 100 + 0) = (100, 100) - same as player!
+      const mouseDir = inputManager.getMouseDirection(100, 100, -100, 0);
+
+      // Mouse is at player position, should return zero
+      expect(mouseDir.x).toBe(0);
+      expect(mouseDir.y).toBe(0);
+    });
+
+    it('should work with camera offset and target detection', () => {
+      // Mouse at screen (400, 100)
+      (inputManager as unknown as { _mouseX: number })._mouseX = 400;
+      (inputManager as unknown as { _mouseY: number })._mouseY = 100;
+
+      // Player at world (200, 100), camera at world (100, 0)
+      // Camera offset in our convention means: worldX = screenX + cameraX
+      // So mouse world = (400 + 100, 100 + 0) = (500, 100)
+      // Direction from player (200, 100) to mouse (500, 100) = (300, 0), normalized (1, 0)
+      const mouseDir = inputManager.getMouseDirection(200, 100, 100, 0);
+
+      expect(mouseDir.x).toBeCloseTo(1);
+      expect(mouseDir.y).toBeCloseTo(0);
+
+      // Enemy at (350, 100) - in the cone
+      const targets: Target[] = [
+        { x: 350, y: 100, type: 'enemy' as TargetType }
+      ];
+
+      const best = autoAimSystem.findBestTarget(200, 100, mouseDir.x, mouseDir.y, targets);
+      expect(best).not.toBeNull();
+      expect(best!.x).toBe(350);
+    });
+
+    it('should simulate full BulletManager auto-aim flow', () => {
+      // This test simulates what BulletManager.fire() does
+      // 1. Get mouse direction
+      // 2. If zero, don't fire
+      // 3. Get targets
+      // 4. Get aim direction
+
+      // Set up mouse pointing to the right
+      (inputManager as unknown as { _mouseX: number })._mouseX = 300;
+      (inputManager as unknown as { _mouseY: number })._mouseY = 100;
+
+      const playerX = 100;
+      const playerY = 100;
+      const cameraX = 0;
+      const cameraY = 0;
+
+      // Step 1: Get mouse direction
+      const mouseDir = inputManager.getMouseDirection(playerX, playerY, cameraX, cameraY);
+
+      // Step 2: Check if zero (it's not)
+      expect(mouseDir.x !== 0 || mouseDir.y !== 0).toBe(true);
+
+      // Step 3: Get targets (simulated)
+      const targets: Target[] = [
+        { x: 200, y: 100, type: 'enemy' as TargetType },
+        { x: 150, y: 80, type: 'wall' as TargetType }
+      ];
+
+      // Step 4: Get aim direction using mouse direction
+      const aimDir = autoAimSystem.getAimDirection(
+        playerX,
+        playerY,
+        mouseDir.x,
+        mouseDir.y,
+        targets
+      );
+
+      // Should prioritize enemy and aim at it
+      expect(aimDir.x).toBeCloseTo(1);
+      expect(aimDir.y).toBeCloseTo(0);
+    });
+
+    it('should not fire when mouse is at player position', () => {
+      // Mouse at same position as player (after camera calculation)
+      (inputManager as unknown as { _mouseX: number })._mouseX = 100;
+      (inputManager as unknown as { _mouseY: number })._mouseY = 100;
+
+      const mouseDir = inputManager.getMouseDirection(100, 100, 0, 0);
+
+      // Should be zero - don't fire
+      expect(mouseDir.x).toBe(0);
+      expect(mouseDir.y).toBe(0);
+
+      // In BulletManager, this would cause early return
     });
   });
 });

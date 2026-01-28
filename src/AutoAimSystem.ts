@@ -22,7 +22,10 @@ export interface Target {
  * AutoAimSystem - Handles Vampire Survivors-style automatic targeting
  *
  * The system uses cone-based detection to find targets in the player's
- * movement direction. Enemies are prioritized over walls.
+ * aiming direction (typically mouse direction). Enemies are prioritized over walls.
+ *
+ * The reference direction can be any normalized vector - in BulletManager,
+ * this is the direction from the player to the mouse cursor.
  */
 export class AutoAimSystem {
   private _isEnabled: boolean = false;
@@ -54,8 +57,8 @@ export class AutoAimSystem {
    * Check if a target is within the aiming cone
    * @param playerX - Player X position
    * @param playerY - Player Y position
-   * @param dirX - Movement direction X (should be normalized)
-   * @param dirY - Movement direction Y (should be normalized)
+   * @param dirX - Reference direction X (typically mouse direction, should be normalized)
+   * @param dirY - Reference direction Y (typically mouse direction, should be normalized)
    * @param targetX - Target X position
    * @param targetY - Target Y position
    * @returns True if target is within the aiming cone
@@ -68,7 +71,7 @@ export class AutoAimSystem {
     targetX: number,
     targetY: number
   ): boolean {
-    // Check for zero movement direction
+    // Check for zero reference direction
     const dirLength = Math.sqrt(dirX * dirX + dirY * dirY);
     if (dirLength < 0.0001) {
       return false;
@@ -107,8 +110,8 @@ export class AutoAimSystem {
    * Prioritizes enemies over walls, then picks closest
    * @param playerX - Player X position
    * @param playerY - Player Y position
-   * @param dirX - Movement direction X
-   * @param dirY - Movement direction Y
+   * @param dirX - Reference direction X (typically mouse direction)
+   * @param dirY - Reference direction Y (typically mouse direction)
    * @param targets - Array of potential targets
    * @returns Best target or null if none found
    */
@@ -123,7 +126,7 @@ export class AutoAimSystem {
       return null;
     }
 
-    // Check for zero movement direction
+    // Check for zero reference direction
     const dirLength = Math.sqrt(dirX * dirX + dirY * dirY);
     if (dirLength < 0.0001) {
       return null;
@@ -192,34 +195,34 @@ export class AutoAimSystem {
    * Get the aim direction based on auto-aim state and available targets
    * @param playerX - Player X position
    * @param playerY - Player Y position
-   * @param moveX - Movement direction X
-   * @param moveY - Movement direction Y
+   * @param refDirX - Reference direction X (typically mouse direction)
+   * @param refDirY - Reference direction Y (typically mouse direction)
    * @param targets - Array of potential targets
-   * @returns Direction to aim (normalized)
+   * @returns Direction to aim (normalized), or reference direction if no target found
    */
   getAimDirection(
     playerX: number,
     playerY: number,
-    moveX: number,
-    moveY: number,
+    refDirX: number,
+    refDirY: number,
     targets: readonly Target[]
   ): { x: number; y: number } {
     // Try to find a target with auto-aim
-    const target = this.findBestTarget(playerX, playerY, moveX, moveY, targets);
+    const target = this.findBestTarget(playerX, playerY, refDirX, refDirY, targets);
 
     if (target) {
       return this.calculateAimDirection(playerX, playerY, target.x, target.y);
     }
 
-    // Fall back to movement direction
-    const length = Math.sqrt(moveX * moveX + moveY * moveY);
+    // Fall back to reference direction (typically mouse direction)
+    const length = Math.sqrt(refDirX * refDirX + refDirY * refDirY);
     if (length < 0.0001) {
       return { x: 0, y: 0 };
     }
 
     return {
-      x: moveX / length,
-      y: moveY / length,
+      x: refDirX / length,
+      y: refDirY / length,
     };
   }
 }
