@@ -33,7 +33,7 @@ describe('Upgrade Max Level System', () => {
       expect(UPGRADE_DATA.oxygenReduction.maxLevel).toBe(9);
       expect(UPGRADE_DATA.penetration.maxLevel).toBe(3);
       expect(UPGRADE_DATA.gemAttract.maxLevel).toBe(5);
-      expect(UPGRADE_DATA.multiWayShot.maxLevel).toBe(5);
+      expect(UPGRADE_DATA.multiWayShot.maxLevel).toBe(2);
       expect(UPGRADE_DATA.bounce.maxLevel).toBe(5);
     });
   });
@@ -193,7 +193,7 @@ describe('Upgrade Max Level System', () => {
       expect(PlayerStats.getUpgradeMaxLevel('oxygenReduction')).toBe(9);
       expect(PlayerStats.getUpgradeMaxLevel('penetration')).toBe(3);
       expect(PlayerStats.getUpgradeMaxLevel('gemAttract')).toBe(5);
-      expect(PlayerStats.getUpgradeMaxLevel('multiWayShot')).toBe(5);
+      expect(PlayerStats.getUpgradeMaxLevel('multiWayShot')).toBe(2);
       expect(PlayerStats.getUpgradeMaxLevel('bounce')).toBe(5);
     });
   });

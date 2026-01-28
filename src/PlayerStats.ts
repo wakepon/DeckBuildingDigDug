@@ -16,6 +16,8 @@ import {
   UPGRADE_GEM_ATTRACT,
   UPGRADE_MULTI_WAY_SHOT,
   UPGRADE_BOUNCE,
+  MULTI_WAY_SHOT_DAMAGE_MULTIPLIERS,
+  MULTI_WAY_SHOT_BULLET_COUNTS,
 } from './constants';
 
 export type UpgradeType =
@@ -107,10 +109,10 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
   multiWayShot: {
     type: 'multiWayShot',
     name: 'マルチショット',
-    description: '弾の発射方向+1',
+    description: '3/5方向に発射 (威力減少)',
     icon: '∴',
     color: 0xff88ff,
-    maxLevel: 5,
+    maxLevel: 2,
   },
   bounce: {
     type: 'bounce',
@@ -179,6 +181,14 @@ export class PlayerStats {
 
   get multiWayShotLevel(): number {
     return this._multiWayShotLevel;
+  }
+
+  get multiWayShotDamageMultiplier(): number {
+    return MULTI_WAY_SHOT_DAMAGE_MULTIPLIERS[this._multiWayShotLevel] ?? 1.0;
+  }
+
+  get multiWayShotBulletCount(): number {
+    return MULTI_WAY_SHOT_BULLET_COUNTS[this._multiWayShotLevel] ?? 1;
   }
 
   get bounceCount(): number {

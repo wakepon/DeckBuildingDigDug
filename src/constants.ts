@@ -144,7 +144,21 @@ export const UPGRADE_MULTI_WAY_SHOT = 1; // +1 bullet direction per upgrade
 export const UPGRADE_BOUNCE = 1; // +1 bounce per upgrade
 
 // Multi-way shot settings
-export const MULTI_WAY_SHOT_ANGLE_SPREAD = (30 * Math.PI) / 180; // 30 degrees in radians
+export const MULTI_WAY_SHOT_ANGLE_SPREAD = (20 * Math.PI) / 180; // 20 degrees in radians
+
+// Multi-way shot damage multipliers by level
+export const MULTI_WAY_SHOT_DAMAGE_MULTIPLIERS: Record<number, number> = {
+  1: 1.0,  // Level 1: 1 bullet, 100% damage
+  2: 0.5,  // Level 2: 3 bullets, 50% damage each
+  3: 0.4,  // Level 3: 5 bullets, 40% damage each
+};
+
+// Multi-way shot bullet counts by level
+export const MULTI_WAY_SHOT_BULLET_COUNTS: Record<number, number> = {
+  1: 1,  // Level 1: 1 bullet
+  2: 3,  // Level 2: 3 bullets (center, +20deg, -20deg)
+  3: 5,  // Level 3: 5 bullets (center, +/-20deg, +/-40deg)
+};
 
 // Elite enemy settings
 export const ELITE_SPAWN_CHANCE = 0.01; // 1% chance on wall break

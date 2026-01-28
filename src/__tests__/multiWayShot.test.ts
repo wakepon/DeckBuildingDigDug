@@ -11,8 +11,8 @@ describe('Multi-Way Shot Feature', () => {
       expect(UPGRADE_MULTI_WAY_SHOT).toBe(1);
     });
 
-    it('MULTI_WAY_SHOT_ANGLE_SPREAD should be 30 degrees in radians', () => {
-      const expectedRadians = (30 * Math.PI) / 180;
+    it('MULTI_WAY_SHOT_ANGLE_SPREAD should be 20 degrees in radians', () => {
+      const expectedRadians = (20 * Math.PI) / 180;
       expect(MULTI_WAY_SHOT_ANGLE_SPREAD).toBeCloseTo(expectedRadians, 5);
     });
   });
@@ -49,11 +49,11 @@ describe('Multi-Way Shot Feature', () => {
       expect(stats.multiWayShotLevel).toBe(2);
     });
 
-    it('should increase multiWayShotLevel cumulatively with multiple upgrades', () => {
+    it('should increase multiWayShotLevel cumulatively with multiple upgrades (max 2)', () => {
       stats.applyUpgrade('multiWayShot' as UpgradeType);
       stats.applyUpgrade('multiWayShot' as UpgradeType);
-      stats.applyUpgrade('multiWayShot' as UpgradeType);
-      expect(stats.multiWayShotLevel).toBe(4);
+      // With maxLevel 3, only 2 upgrades allowed (level 1 -> 2 -> 3)
+      expect(stats.multiWayShotLevel).toBe(3);
     });
 
     it('should reset multiWayShotLevel to 1 on reset()', () => {

@@ -64,7 +64,7 @@ export class BulletManager {
 
       // Check enemy collision first
       if (this.enemyManager) {
-        const damage = this.playerStats.attackPower;
+        const damage = this.playerStats.attackPower * this.playerStats.multiWayShotDamageMultiplier;
         const bulletRadius = this.playerStats.bulletSize / 2;
         const hitEnemy = this.enemyManager.damageEnemyAt(
           bullet.x,
@@ -87,8 +87,10 @@ export class BulletManager {
         // Get wall color before damaging
         const wallColor = this.wallManager.getWallColor(gridX, gridY);
 
-        // Damage wall using attack power (floor value for integer damage)
-        const wallDamage = Math.floor(this.playerStats.attackPower);
+        // Damage wall using attack power with multi-way shot penalty (minimum 1 damage)
+        const wallDamage = Math.max(1, Math.floor(
+          this.playerStats.attackPower * this.playerStats.multiWayShotDamageMultiplier
+        ));
         const destroyed = this.wallManager.damageWall(gridX, gridY, wallDamage);
 
         if (destroyed && this.onWallDestroyed && wallColor !== null) {
@@ -231,11 +233,11 @@ export class BulletManager {
     // Don't fire if mouse is too close
     if (Math.abs(dirX) < 1 && Math.abs(dirY) < 1) return;
 
-    // Calculate multiple bullet directions based on multi-way shot level
+    // Calculate multiple bullet directions based on multi-way shot bullet count
     const directions = calculateMultiWayShotDirections(
       dirX,
       dirY,
-      this.playerStats.multiWayShotLevel
+      this.playerStats.multiWayShotBulletCount
     );
 
     // Create a bullet for each direction

@@ -16,8 +16,8 @@ describe('calculateMultiWayShotDirections', () => {
     });
   });
 
-  describe('two-way shot (level 2)', () => {
-    it('should return 2 directions for level 2', () => {
+  describe('two-way shot (2 bullets)', () => {
+    it('should return 2 directions for 2 bullets', () => {
       const directions = calculateMultiWayShotDirections(100, 0, 2);
       expect(directions).toHaveLength(2);
     });
@@ -52,8 +52,8 @@ describe('calculateMultiWayShotDirections', () => {
     });
   });
 
-  describe('three-way shot (level 3)', () => {
-    it('should return 3 directions for level 3', () => {
+  describe('three-way shot (3 bullets)', () => {
+    it('should return 3 directions for 3 bullets', () => {
       const directions = calculateMultiWayShotDirections(100, 0, 3);
       expect(directions).toHaveLength(3);
     });
@@ -84,8 +84,8 @@ describe('calculateMultiWayShotDirections', () => {
     });
   });
 
-  describe('five-way shot (level 5)', () => {
-    it('should return 5 directions for level 5', () => {
+  describe('five-way shot (5 bullets)', () => {
+    it('should return 5 directions for 5 bullets', () => {
       const directions = calculateMultiWayShotDirections(100, 0, 5);
       expect(directions).toHaveLength(5);
     });
