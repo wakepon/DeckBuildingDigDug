@@ -17,6 +17,7 @@ import { TransitionEffect } from './TransitionEffect';
 import { PlayerStats } from './PlayerStats';
 import { UpgradeSystem } from './UpgradeSystem';
 import { StatsDisplay } from './StatsDisplay';
+import { DebugWindow } from './DebugWindow';
 
 export class Game {
   private app: Application;
@@ -38,6 +39,7 @@ export class Game {
   private playerStats!: PlayerStats;
   private upgradeSystem!: UpgradeSystem;
   private statsDisplay!: StatsDisplay;
+  private debugWindow!: DebugWindow;
   private isTransitioning: boolean = false;
   private isPaused: boolean = false;
 
@@ -119,6 +121,14 @@ export class Game {
 
     // Initialize stats display
     this.statsDisplay = new StatsDisplay(this.playerStats);
+
+    // Initialize debug window
+    this.debugWindow = new DebugWindow(this.playerStats);
+
+    // Debug window stats changed callback
+    this.debugWindow.setOnStatsChanged(() => {
+      this.statsDisplay.updateDisplay();
+    });
 
     // Initialize UI
     this.ui = new UI();
@@ -229,6 +239,7 @@ export class Game {
     this.app.stage.addChild(this.statsDisplay.container); // Stats display
     this.app.stage.addChild(this.transitionEffect.graphics); // Transition on top of all
     this.app.stage.addChild(this.upgradeSystem.container); // Upgrade UI on very top
+    this.app.stage.addChild(this.debugWindow.container); // Debug window on very top
 
     // Start game loop
     this.app.ticker.add(this.update.bind(this));
@@ -241,6 +252,14 @@ export class Game {
 
   private update(): void {
     const deltaTime = this.app.ticker.deltaMS / 1000;
+
+    // Check for debug window toggle (Shift + 1)
+    if (this.inputManager.wasDebugKeyJustPressed()) {
+      this.debugWindow.toggle();
+    }
+
+    // Update previous keys state at the end of frame processing for input
+    this.inputManager.updatePreviousKeys();
 
     // Update transition effect
     this.transitionEffect.update(deltaTime);

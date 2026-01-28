@@ -241,6 +241,51 @@ export class PlayerStats {
     return shuffled.slice(0, count);
   }
 
+  // Remove an upgrade (for debug purposes)
+  removeUpgrade(type: UpgradeType): boolean {
+    // Check if the upgrade exists in acquiredUpgrades
+    const index = this._acquiredUpgrades.indexOf(type);
+    if (index === -1) {
+      return false;
+    }
+
+    // Remove from acquired upgrades array
+    this._acquiredUpgrades.splice(index, 1);
+
+    // Revert the stat change, ensuring minimum values
+    switch (type) {
+      case 'attackPower':
+        this.attackPowerMultiplier = Math.max(1, this.attackPowerMultiplier - UPGRADE_ATTACK_POWER);
+        break;
+      case 'attackSpeed':
+        this.attackSpeedMultiplier = Math.max(1, this.attackSpeedMultiplier - UPGRADE_ATTACK_SPEED);
+        break;
+      case 'bulletSize':
+        this.bulletSizeMultiplier = Math.max(1, this.bulletSizeMultiplier - UPGRADE_BULLET_SIZE);
+        break;
+      case 'moveSpeed':
+        this.moveSpeedMultiplier = Math.max(1, this.moveSpeedMultiplier - UPGRADE_MOVE_SPEED);
+        break;
+      case 'maxHp':
+        this.maxHpBonus = Math.max(0, this.maxHpBonus - UPGRADE_MAX_HP);
+        break;
+      case 'oxygenReduction':
+        this.oxygenReductionMultiplier = Math.min(1, this.oxygenReductionMultiplier + UPGRADE_OXYGEN_REDUCTION);
+        break;
+      case 'penetration':
+        this._penetrationCount = Math.max(0, this._penetrationCount - UPGRADE_PENETRATION);
+        break;
+      case 'gemAttract':
+        this.gemAttractMultiplier = Math.max(1, this.gemAttractMultiplier - UPGRADE_GEM_ATTRACT);
+        break;
+      case 'multiWayShot':
+        this._multiWayShotLevel = Math.max(1, this._multiWayShotLevel - UPGRADE_MULTI_WAY_SHOT);
+        break;
+    }
+
+    return true;
+  }
+
   // Reset stats (for new game)
   reset(): void {
     this._level = 1;

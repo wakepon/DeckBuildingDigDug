@@ -1,5 +1,6 @@
 export class InputManager {
   private keys: Set<string> = new Set();
+  private previousKeys: Set<string> = new Set();
   private _mouseX: number = 0;
   private _mouseY: number = 0;
   private _isMouseDown: boolean = false;
@@ -48,6 +49,32 @@ export class InputManager {
 
   isKeyDown(code: string): boolean {
     return this.keys.has(code);
+  }
+
+  // Returns true only on the first frame a key is pressed
+  wasKeyJustPressed(code: string): boolean {
+    return this.keys.has(code) && !this.previousKeys.has(code);
+  }
+
+  // Check if debug key combination (Shift + 1) is pressed
+  isDebugKeyPressed(): boolean {
+    const shiftPressed = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
+    const digit1Pressed = this.keys.has('Digit1');
+    return shiftPressed && digit1Pressed;
+  }
+
+  // Returns true only on the first frame debug key combination is pressed
+  wasDebugKeyJustPressed(): boolean {
+    const isPressed = this.isDebugKeyPressed();
+    const wasPressed =
+      (this.previousKeys.has('ShiftLeft') || this.previousKeys.has('ShiftRight')) &&
+      this.previousKeys.has('Digit1');
+    return isPressed && !wasPressed;
+  }
+
+  // Call at the end of each frame to update previous keys state
+  updatePreviousKeys(): void {
+    this.previousKeys = new Set(this.keys);
   }
 
   get moveDirection(): { x: number; y: number } {
