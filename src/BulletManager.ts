@@ -85,9 +85,17 @@ export class BulletManager {
     // Handle firing with dynamic fire rate from stats
     this.fireCooldown -= deltaTime;
 
-    if (this.inputManager.isMouseDown && this.fireCooldown <= 0) {
-      this.fire(cameraX, cameraY);
-      this.fireCooldown = this.playerStats.fireRate;
+    if (this.fireCooldown <= 0) {
+      // Auto-aim: fire automatically when enabled
+      if (this.playerStats.autoAimEnabled) {
+        this.fire(cameraX, cameraY);
+        this.fireCooldown = this.playerStats.fireRate;
+      }
+      // Manual aim: fire when mouse is down
+      else if (this.inputManager.isMouseDown) {
+        this.fire(cameraX, cameraY);
+        this.fireCooldown = this.playerStats.fireRate;
+      }
     }
 
     // Update bullets
