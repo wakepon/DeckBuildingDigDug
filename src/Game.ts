@@ -20,6 +20,7 @@ import { UpgradeSystem } from './UpgradeSystem';
 import { StatsDisplay } from './StatsDisplay';
 import { DebugWindow } from './DebugWindow';
 import { AutoAimSystem } from './AutoAimSystem';
+import { Crosshair } from './Crosshair';
 
 export class Game {
   private app: Application;
@@ -44,6 +45,7 @@ export class Game {
   private statsDisplay!: StatsDisplay;
   private debugWindow!: DebugWindow;
   private autoAimSystem!: AutoAimSystem;
+  private crosshair!: Crosshair;
   private isTransitioning: boolean = false;
   private isPaused: boolean = false;
 
@@ -143,6 +145,9 @@ export class Game {
     // Initialize UI
     this.ui = new UI();
 
+    // Initialize Crosshair
+    this.crosshair = new Crosshair(this.inputManager);
+
     // Connect managers
     this.bulletManager.setEnemyManager(this.enemyManager);
     this.bulletManager.setAutoAimSystem(this.autoAimSystem);
@@ -165,6 +170,7 @@ export class Game {
 
     this.app.stage.addChild(this.gameContainer);
     this.app.stage.addChild(this.overlayEffect.container); // Overlay on top of game
+    this.app.stage.addChild(this.crosshair.container); // Crosshair follows mouse
     this.app.stage.addChild(this.ui.container); // UI is on top of everything
     this.app.stage.addChild(this.statsDisplay.container); // Stats display
     this.app.stage.addChild(this.transitionEffect.graphics); // Transition on top of all
@@ -315,6 +321,9 @@ export class Game {
 
     // Update overlay effects
     this.overlayEffect.update(deltaTime);
+
+    // Update crosshair position
+    this.crosshair.update();
 
     // Check stairs collision for floor transition
     if (this.stairs.checkCollision(this.player.x, this.player.y)) {
