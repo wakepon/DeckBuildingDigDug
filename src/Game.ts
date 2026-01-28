@@ -99,8 +99,9 @@ export class Game {
     // Initialize particle manager
     this.particleManager = new ParticleManager();
 
-    // Initialize enemy manager with scaled HP
+    // Initialize enemy manager with scaled HP and EventBus
     this.enemyManager = new EnemyManager();
+    this.enemyManager.setEventBus(this.eventBus);
     this.enemyManager.setEnemyHP(this.floorManager.getEnemyHP());
     this.enemyManager.setEnemySpawnChance(this.floorManager.getEnemySpawnChance());
 
@@ -188,6 +189,22 @@ export class Game {
     this.eventBus.on('ENEMY_DIED', (event) => {
       this.gemManager.spawnGem(event.x, event.y);
       this.particleManager.emit(event.x, event.y, 0xff4444); // Red particles for enemy death
+    });
+
+    // Elite enemy death -> multiple gem spawn + death particles
+    this.eventBus.on('ELITE_DIED', (event) => {
+      // Spawn multiple gems for elite enemies
+      for (let i = 0; i < 3; i++) {
+        const offsetX = (Math.random() - 0.5) * 30;
+        const offsetY = (Math.random() - 0.5) * 30;
+        this.gemManager.spawnGem(event.x + offsetX, event.y + offsetY);
+      }
+      this.particleManager.emit(event.x, event.y, ELITE_COLOR); // Elite color particles
+    });
+
+    // Treasure chest collected -> show upgrade selection
+    this.eventBus.on('CHEST_COLLECTED', (event) => {
+      this.showUpgradeSelection(event.upgradeCount);
     });
 
     // Gem collected -> add exp and check level up

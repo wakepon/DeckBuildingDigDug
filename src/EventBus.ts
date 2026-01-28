@@ -6,6 +6,8 @@
 export type GameEvent =
   | { type: 'WALL_DESTROYED'; x: number; y: number; color: number }
   | { type: 'ENEMY_DIED'; x: number; y: number }
+  | { type: 'ELITE_DIED'; x: number; y: number }
+  | { type: 'CHEST_COLLECTED'; upgradeCount: number }
   | { type: 'EXP_GAINED'; amount: number }
   | { type: 'LEVEL_UP' }
   | { type: 'UPGRADE_SELECTED'; upgradeType: string }

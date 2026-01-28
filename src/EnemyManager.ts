@@ -3,6 +3,7 @@ import { Enemy } from './Enemy';
 import { EliteEnemy } from './EliteEnemy';
 import { TreasureChest } from './TreasureChest';
 import { getDistance } from './utils/math';
+import { EventBus } from './EventBus';
 import {
   ENEMY_SPAWN_CHANCE,
   SPAWNER_CHANCE,
@@ -36,6 +37,7 @@ export class EnemyManager {
   private treasureChests: TreasureChest[] = [];
   private spawners: Spawner[] = [];
   private nextSpawnerId: number = 0;
+  private eventBus: EventBus | null = null;
   private onEnemyDeath: ((x: number, y: number) => void) | null = null;
   private onEliteDeath: ((x: number, y: number) => void) | null = null;
   private onChestCollected: ((upgradeCount: number) => void) | null = null;
@@ -45,6 +47,10 @@ export class EnemyManager {
 
   constructor() {
     this.container = new Container();
+  }
+
+  setEventBus(eventBus: EventBus): void {
+    this.eventBus = eventBus;
   }
 
   setEnemyHP(hp: number): void {
@@ -208,6 +214,11 @@ export class EnemyManager {
           }
         }
 
+        // Emit EventBus event
+        if (this.eventBus) {
+          this.eventBus.emit({ type: 'ENEMY_DIED', x: enemy.x, y: enemy.y });
+        }
+        // Keep backward compatibility with callback
         if (this.onEnemyDeath) {
           this.onEnemyDeath(enemy.x, enemy.y);
         }
@@ -236,6 +247,11 @@ export class EnemyManager {
         // Spawn treasure chest on death
         this.spawnTreasureChest(elite.x, elite.y);
 
+        // Emit EventBus event
+        if (this.eventBus) {
+          this.eventBus.emit({ type: 'ELITE_DIED', x: elite.x, y: elite.y });
+        }
+        // Keep backward compatibility with callback
         if (this.onEliteDeath) {
           this.onEliteDeath(elite.x, elite.y);
         }
@@ -264,6 +280,11 @@ export class EnemyManager {
 
       // Check collision with player
       if (chest.checkCollision(playerX, playerY)) {
+        // Emit EventBus event
+        if (this.eventBus) {
+          this.eventBus.emit({ type: 'CHEST_COLLECTED', upgradeCount: chest.upgradeCount });
+        }
+        // Keep backward compatibility with callback
         if (this.onChestCollected) {
           this.onChestCollected(chest.upgradeCount);
         }
