@@ -366,8 +366,8 @@ export class Game {
     // Clear particles
     this.particleManager.clear();
 
-    // Reset oxygen to full
-    this.oxygenController.reset();
+    // Note: Oxygen is NOT reset during floor transition
+    // This allows oxygen to carry over between floors, adding strategic depth
 
     // Update enemy manager with new floor difficulty
     this.enemyManager.setEnemyHP(this.floorManager.getEnemyHP());
