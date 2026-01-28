@@ -120,7 +120,7 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     description: '壁で1回反射',
     icon: '↩',
     color: 0x44ff88,
-    maxLevel: 5,
+    maxLevel: 3,
   },
 };
 
