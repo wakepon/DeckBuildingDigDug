@@ -1,45 +1,40 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container } from 'pixi.js';
 import { Enemy } from './Enemy';
 import { EliteEnemy } from './EliteEnemy';
 import { TreasureChest } from './TreasureChest';
 import { getDistance } from './utils/math';
 import { EventBus } from './EventBus';
 import {
-  ENEMY_SPAWN_CHANCE,
-  SPAWNER_CHANCE,
-  SPAWNER_INTERVAL,
-  SPAWNER_MAX_ENEMIES,
-  SPAWNER_DISABLE_RANGE,
-  SPAWNER_SIZE,
-  SPAWNER_COLOR,
   ENEMY_SIZE,
   PLAYER_SIZE,
   ENEMY_DAMAGE,
   ELITE_DAMAGE,
   ELITE_SPAWN_CHANCE,
   ENEMY_HP,
+  EDGE_SPAWN_BASE_INTERVAL,
+  EDGE_SPAWN_MIN_INTERVAL,
+  EDGE_SPAWN_INTERVAL_DECAY,
+  EDGE_SPAWN_OFFSET,
+  EDGE_SPAWN_MAX_ENEMIES,
+  ELITE_MAX_PER_FLOOR,
+  SCREEN_WIDTH,
+  SCREEN_HEIGHT,
+  WORLD_WIDTH,
+  WORLD_HEIGHT,
 } from './constants';
-
-interface Spawner {
-  id: number;
-  x: number;
-  y: number;
-  graphics: Graphics;
-  timer: number;
-  aliveCount: number; // Current number of alive enemies from this spawner
-  active: boolean;
-}
 
 export class EnemyManager {
   public container: Container;
   private enemies: Enemy[] = [];
   private eliteEnemies: EliteEnemy[] = [];
   private treasureChests: TreasureChest[] = [];
-  private spawners: Spawner[] = [];
-  private nextSpawnerId: number = 0;
   private eventBus: EventBus;
   private enemyHP: number = ENEMY_HP;
-  private enemySpawnChance: number = ENEMY_SPAWN_CHANCE;
+  private edgeSpawnTimer: number = 0;
+  private edgeSpawnInterval: number = EDGE_SPAWN_BASE_INTERVAL;
+  private cameraX: number = 0;
+  private cameraY: number = 0;
+  private eliteSpawnedThisFloor: number = 0;
 
   constructor(eventBus: EventBus) {
     this.container = new Container();
@@ -50,83 +45,86 @@ export class EnemyManager {
     this.enemyHP = hp;
   }
 
-  setEnemySpawnChance(chance: number): void {
-    this.enemySpawnChance = chance;
-  }
 
   onWallDestroyed(x: number, y: number): void {
-    // Check for elite enemy first (2% chance)
-    if (Math.random() < ELITE_SPAWN_CHANCE) {
+    // Only elite enemies spawn from walls now (with floor limit)
+    if (
+      Math.random() < ELITE_SPAWN_CHANCE &&
+      this.eliteSpawnedThisFloor < ELITE_MAX_PER_FLOOR
+    ) {
       this.spawnEliteEnemy(x, y);
-      return;
-    }
-
-    // Check for spawner (5% chance)
-    if (Math.random() < SPAWNER_CHANCE) {
-      this.createSpawner(x, y);
-      return;
-    }
-
-    // Check for enemy spawn (scaled chance)
-    if (Math.random() < this.enemySpawnChance) {
-      this.spawnEnemy(x, y);
+      this.eliteSpawnedThisFloor++;
     }
   }
 
-  private createSpawner(x: number, y: number): void {
-    const graphics = new Graphics();
-    this.drawSpawner(graphics, true, 0);
-    graphics.x = x;
-    graphics.y = y;
-
-    const spawner: Spawner = {
-      id: this.nextSpawnerId++,
-      x,
-      y,
-      graphics,
-      timer: SPAWNER_INTERVAL,
-      aliveCount: 0,
-      active: true,
-    };
-
-    this.spawners.push(spawner);
-    this.container.addChild(graphics);
+  setCameraPosition(x: number, y: number): void {
+    this.cameraX = x;
+    this.cameraY = y;
   }
 
-  private drawSpawner(graphics: Graphics, active: boolean, aliveCount: number): void {
-    graphics.clear();
+  resetFloorState(): void {
+    this.edgeSpawnTimer = 0;
+    this.edgeSpawnInterval = EDGE_SPAWN_BASE_INTERVAL;
+    this.eliteSpawnedThisFloor = 0;
+  }
 
-    const color = active ? SPAWNER_COLOR : 0x444444;
+  private calculateEdgeSpawnPosition(): { x: number; y: number } {
+    const visibleLeft = -this.cameraX;
+    const visibleRight = -this.cameraX + SCREEN_WIDTH;
+    const visibleTop = -this.cameraY;
+    const visibleBottom = -this.cameraY + SCREEN_HEIGHT;
 
-    // Portal-like effect
-    graphics.circle(0, 0, SPAWNER_SIZE / 2);
-    graphics.fill({ color, alpha: 0.7 });
+    const edge = Math.floor(Math.random() * 4);
 
-    // Swirling pattern
-    for (let i = 0; i < 3; i++) {
-      const angle = (Date.now() / 500 + i * (Math.PI * 2 / 3)) % (Math.PI * 2);
-      const r = SPAWNER_SIZE / 3;
-      graphics.circle(Math.cos(angle) * r, Math.sin(angle) * r, 4);
-      graphics.fill(active ? 0xaa00ff : 0x666666);
+    let x: number;
+    let y: number;
+
+    switch (edge) {
+      case 0: // Top edge
+        x = visibleLeft + Math.random() * SCREEN_WIDTH;
+        y = visibleTop - EDGE_SPAWN_OFFSET;
+        break;
+      case 1: // Right edge
+        x = visibleRight + EDGE_SPAWN_OFFSET;
+        y = visibleTop + Math.random() * SCREEN_HEIGHT;
+        break;
+      case 2: // Bottom edge
+        x = visibleLeft + Math.random() * SCREEN_WIDTH;
+        y = visibleBottom + EDGE_SPAWN_OFFSET;
+        break;
+      case 3: // Left edge
+      default:
+        x = visibleLeft - EDGE_SPAWN_OFFSET;
+        y = visibleTop + Math.random() * SCREEN_HEIGHT;
+        break;
     }
 
-    // Outer ring
-    graphics.circle(0, 0, SPAWNER_SIZE / 2 + 3);
-    graphics.stroke({ width: 3, color: active ? 0xff00ff : 0x555555, alpha: 0.8 });
+    x = Math.max(EDGE_SPAWN_OFFSET, Math.min(WORLD_WIDTH - EDGE_SPAWN_OFFSET, x));
+    y = Math.max(EDGE_SPAWN_OFFSET, Math.min(WORLD_HEIGHT - EDGE_SPAWN_OFFSET, y));
 
-    // Show enemy count indicator (small dots)
-    if (active) {
-      for (let i = 0; i < aliveCount; i++) {
-        const dotAngle = (i / SPAWNER_MAX_ENEMIES) * Math.PI * 2 - Math.PI / 2;
-        const dotR = SPAWNER_SIZE / 2 + 8;
-        graphics.circle(Math.cos(dotAngle) * dotR, Math.sin(dotAngle) * dotR, 3);
-        graphics.fill(0xff4444);
-      }
+    return { x, y };
+  }
+
+  private updateEdgeSpawning(deltaTime: number): void {
+    this.edgeSpawnTimer -= deltaTime;
+
+    if (
+      this.edgeSpawnTimer <= 0 &&
+      this.enemies.length < EDGE_SPAWN_MAX_ENEMIES
+    ) {
+      const pos = this.calculateEdgeSpawnPosition();
+      this.spawnEnemy(pos.x, pos.y);
+
+      this.edgeSpawnInterval = Math.max(
+        EDGE_SPAWN_MIN_INTERVAL,
+        this.edgeSpawnInterval * EDGE_SPAWN_INTERVAL_DECAY
+      );
+      this.edgeSpawnTimer = this.edgeSpawnInterval;
     }
   }
 
-  spawnEnemy(x: number, y: number, spawnerId: number = -1): void {
-    const enemy = new Enemy(x, y, spawnerId, this.enemyHP);
+  spawnEnemy(x: number, y: number): void {
+    const enemy = new Enemy(x, y, this.enemyHP);
     this.enemies.push(enemy);
     this.container.addChild(enemy.graphics);
   }
@@ -143,55 +141,14 @@ export class EnemyManager {
     this.container.addChild(chest.graphics);
   }
 
-  private getSpawnerById(id: number): Spawner | undefined {
-    return this.spawners.find(s => s.id === id);
-  }
-
   update(deltaTime: number, playerX: number, playerY: number): void {
-    // Update spawners
-    for (let i = this.spawners.length - 1; i >= 0; i--) {
-      const spawner = this.spawners[i];
-
-      if (!spawner.active) {
-        this.drawSpawner(spawner.graphics, false, 0);
-        continue;
-      }
-
-      // Check if player is close enough to disable
-      const dist = getDistance(spawner.x, spawner.y, playerX, playerY);
-
-      if (dist < SPAWNER_DISABLE_RANGE) {
-        spawner.active = false;
-        this.drawSpawner(spawner.graphics, false, 0);
-        continue;
-      }
-
-      // Spawn timer - only spawn if alive count is below max
-      spawner.timer -= deltaTime;
-      if (spawner.timer <= 0 && spawner.aliveCount < SPAWNER_MAX_ENEMIES) {
-        this.spawnEnemy(spawner.x, spawner.y, spawner.id);
-        spawner.aliveCount++;
-        spawner.timer = SPAWNER_INTERVAL;
-      }
-
-      // Animate spawner
-      this.drawSpawner(spawner.graphics, true, spawner.aliveCount);
-    }
+    this.updateEdgeSpawning(deltaTime);
 
     // Update enemies
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
 
       if (!enemy.active) {
-        // Decrement spawner's alive count if this enemy was from a spawner
-        if (enemy.spawnerId >= 0) {
-          const spawner = this.getSpawnerById(enemy.spawnerId);
-          if (spawner && spawner.aliveCount > 0) {
-            spawner.aliveCount--;
-          }
-        }
-
-        // Emit EventBus event
         this.eventBus.emit({ type: 'ENEMY_DIED', x: enemy.x, y: enemy.y });
 
         this.container.removeChild(enemy.graphics);
@@ -207,7 +164,11 @@ export class EnemyManager {
       const collisionDist = (PLAYER_SIZE / 2) + (ENEMY_SIZE / 2);
 
       if (dist < collisionDist) {
-        this.eventBus.emit({ type: 'PLAYER_DAMAGED', damage: ENEMY_DAMAGE });
+        this.eventBus.emit({
+          type: 'PLAYER_DAMAGED',
+          damage: ENEMY_DAMAGE,
+          newHp: 0,
+        });
       }
     }
 
@@ -235,7 +196,11 @@ export class EnemyManager {
       const collisionDist = (PLAYER_SIZE / 2) + elite.radius;
 
       if (dist < collisionDist) {
-        this.eventBus.emit({ type: 'PLAYER_DAMAGED', damage: ELITE_DAMAGE });
+        this.eventBus.emit({
+          type: 'PLAYER_DAMAGED',
+          damage: ELITE_DAMAGE,
+          newHp: 0,
+        });
       }
     }
 
@@ -311,12 +276,5 @@ export class EnemyManager {
       chest.destroy();
     }
     this.treasureChests = [];
-
-    for (const spawner of this.spawners) {
-      this.container.removeChild(spawner.graphics);
-      spawner.graphics.destroy();
-    }
-    this.spawners = [];
-    this.nextSpawnerId = 0;
   }
 }

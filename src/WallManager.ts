@@ -108,11 +108,11 @@ export class WallManager {
 
   private drawWall(graphics: Graphics, hp: number): void {
     const color = this.getWallColorForHP(hp);
-    const padding = 1;
+    const padding = -1; // Negative padding to overlap walls and prevent gaps
 
     graphics.clear();
 
-    // Draw wall rectangle with slight padding for grid effect
+    // Draw wall rectangle with overlap to prevent gaps
     graphics.rect(padding, padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
     graphics.fill(color);
 

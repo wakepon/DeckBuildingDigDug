@@ -2,11 +2,8 @@ import { ENEMY_SIZE, ENEMY_SPEED, ENEMY_HP, ENEMY_COLOR } from './constants';
 import { BaseEnemy } from './BaseEnemy';
 
 export class Enemy extends BaseEnemy {
-  public spawnerId: number = -1; // -1 means not spawned from a spawner
-
-  constructor(x: number, y: number, spawnerId: number = -1, hp: number = ENEMY_HP) {
+  constructor(x: number, y: number, hp: number = ENEMY_HP) {
     super(x, y, hp);
-    this.spawnerId = spawnerId;
   }
 
   protected getSpeed(): number {

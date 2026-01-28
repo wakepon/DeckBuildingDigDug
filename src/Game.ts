@@ -106,7 +106,6 @@ export class Game {
     // Initialize enemy manager with EventBus, scaled HP and spawn chance
     this.enemyManager = new EnemyManager(this.eventBus);
     this.enemyManager.setEnemyHP(this.floorManager.getEnemyHP());
-    this.enemyManager.setEnemySpawnChance(this.floorManager.getEnemySpawnChance());
 
     // Initialize gem manager with stats, EventBus, and scaled EXP
     this.gemManager = new GemManager(this.playerStats, this.eventBus);
@@ -159,12 +158,13 @@ export class Game {
     this.oxygenTankManager.spawnInitialTanks();
 
     // Build scene hierarchy
+    // Enemies are drawn below walls so they're hidden behind walls
+    this.gameContainer.addChild(this.enemyManager.container);
     this.gameContainer.addChild(this.wallManager.container);
     this.gameContainer.addChild(this.stairs.graphics);
     this.gameContainer.addChild(this.oxygenTankManager.container);
     this.gameContainer.addChild(this.gemManager.container);
     this.gameContainer.addChild(this.bulletManager.container);
-    this.gameContainer.addChild(this.enemyManager.container);
     this.gameContainer.addChild(this.player.container);
     this.gameContainer.addChild(this.particleManager.container);
 
@@ -304,11 +304,12 @@ export class Game {
     // Update game components
     this.player.update(deltaTime);
 
-    // Get camera position for bullet manager
+    // Get camera position for bullet manager and enemy manager
     const cameraX = this.gameContainer.x;
     const cameraY = this.gameContainer.y;
 
     this.bulletManager.update(deltaTime, cameraX, cameraY);
+    this.enemyManager.setCameraPosition(cameraX, cameraY);
     this.enemyManager.update(deltaTime, this.player.x, this.player.y);
     this.gemManager.update(deltaTime, this.player.x, this.player.y);
     this.oxygenTankManager.update(deltaTime, this.player.x, this.player.y);
@@ -382,8 +383,9 @@ export class Game {
       (PLAYER_SPAWN_CENTER_Y + 0.5) * TILE_SIZE
     );
 
-    // Clear enemies
+    // Clear enemies and reset edge spawn state
     this.enemyManager.clear();
+    this.enemyManager.resetFloorState();
 
     // Clear gems
     this.gemManager.clear();
@@ -403,7 +405,6 @@ export class Game {
 
     // Update enemy manager with new floor difficulty
     this.enemyManager.setEnemyHP(this.floorManager.getEnemyHP());
-    this.enemyManager.setEnemySpawnChance(this.floorManager.getEnemySpawnChance());
 
     // Update gem manager with new floor EXP value
     this.gemManager.setExpValue(this.floorManager.getGemExpValue());
