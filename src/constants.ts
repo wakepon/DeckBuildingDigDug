@@ -51,7 +51,8 @@ export const ENEMY_SIZE = 24;
 export const ENEMY_SPEED = 80; // pixels per second
 export const ENEMY_HP = 3;
 export const ENEMY_COLOR = 0xff4444;
-export const ENEMY_DAMAGE = 1;
+export const ENEMY_DAMAGE = 2;
+export const ELITE_DAMAGE = 8; // 4x normal enemy damage
 export const ENEMY_SPAWN_CHANCE = 0.20; // 20% chance on wall break
 
 // Spawner settings (infinite spawn point)

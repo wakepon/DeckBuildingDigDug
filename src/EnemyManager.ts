@@ -13,6 +13,7 @@ import {
   ENEMY_SIZE,
   PLAYER_SIZE,
   ENEMY_DAMAGE,
+  ELITE_DAMAGE,
   ELITE_SPAWN_CHANCE,
 } from './constants';
 
@@ -255,7 +256,7 @@ export class EnemyManager {
       const collisionDist = (PLAYER_SIZE / 2) + elite.radius;
 
       if (dist < collisionDist && this.onPlayerDamage) {
-        this.onPlayerDamage(ENEMY_DAMAGE * 2); // Elite does double damage
+        this.onPlayerDamage(ELITE_DAMAGE);
       }
     }
 
