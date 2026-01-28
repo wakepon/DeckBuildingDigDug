@@ -80,13 +80,15 @@ export const ENEMY_DAMAGE = 2;
 export const ELITE_DAMAGE = 8; // 4x normal enemy damage
 export const ENEMY_SPAWN_CHANCE = 0.20; // 20% chance on wall break
 
-// Spawner settings (infinite spawn point)
-export const SPAWNER_CHANCE = 0.05; // 5% chance on wall break
-export const SPAWNER_INTERVAL = 2.0; // seconds between spawns
-export const SPAWNER_MAX_ENEMIES = 5;
-export const SPAWNER_DISABLE_RANGE = 60; // pixels - player must get close to disable
-export const SPAWNER_SIZE = 30;
-export const SPAWNER_COLOR = 0x8800ff;
+// Edge Spawning Settings
+export const EDGE_SPAWN_BASE_INTERVAL = 2.0; // Base seconds between spawns
+export const EDGE_SPAWN_MIN_INTERVAL = 0.1; // Minimum spawn interval
+export const EDGE_SPAWN_INTERVAL_DECAY = 0.95; // Multiply interval by this each spawn
+export const EDGE_SPAWN_OFFSET = 50; // Pixels outside screen edge
+export const EDGE_SPAWN_MAX_ENEMIES = 200; // Maximum enemies alive
+
+// Elite limits
+export const ELITE_MAX_PER_FLOOR = 2; // Max elites per floor
 
 // Gem settings
 export const GEM_SIZE = 12;
