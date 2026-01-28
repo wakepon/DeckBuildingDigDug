@@ -27,7 +27,7 @@ export class FloorManager {
   // Scaled enemy HP for current floor
   getEnemyHP(): number {
     const scale = 1 + (this._currentFloor - 1) * FLOOR_ENEMY_HP_SCALE;
-    return Math.floor(ENEMY_HP * scale);
+    return Math.ceil(ENEMY_HP * scale);
   }
 
   // Scaled enemy spawn chance for current floor

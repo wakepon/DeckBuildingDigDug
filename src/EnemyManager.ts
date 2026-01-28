@@ -15,6 +15,7 @@ import {
   ENEMY_DAMAGE,
   ELITE_DAMAGE,
   ELITE_SPAWN_CHANCE,
+  ENEMY_HP,
 } from './constants';
 
 interface Spawner {
@@ -38,7 +39,7 @@ export class EnemyManager {
   private onEliteDeath: ((x: number, y: number) => void) | null = null;
   private onChestCollected: ((upgradeCount: number) => void) | null = null;
   private onPlayerDamage: ((damage: number) => void) | null = null;
-  private enemyHP: number = 3;
+  private enemyHP: number = ENEMY_HP;
   private enemySpawnChance: number = ENEMY_SPAWN_CHANCE;
 
   constructor() {

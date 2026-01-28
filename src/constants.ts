@@ -49,7 +49,7 @@ export const PLAYER_INVINCIBILITY_TIME = 0.5; // seconds
 // Enemy settings
 export const ENEMY_SIZE = 24;
 export const ENEMY_SPEED = 80; // pixels per second
-export const ENEMY_HP = 3;
+export const ENEMY_HP = 1;
 export const ENEMY_COLOR = 0xff4444;
 export const ENEMY_DAMAGE = 2;
 export const ELITE_DAMAGE = 8; // 4x normal enemy damage
