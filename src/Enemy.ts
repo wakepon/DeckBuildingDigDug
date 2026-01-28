@@ -1,30 +1,19 @@
-import { Graphics } from 'pixi.js';
 import { ENEMY_SIZE, ENEMY_SPEED, ENEMY_HP, ENEMY_COLOR } from './constants';
+import { BaseEnemy } from './BaseEnemy';
 
-export class Enemy {
-  public graphics: Graphics;
-  public x: number;
-  public y: number;
-  public hp: number;
-  public active: boolean = true;
+export class Enemy extends BaseEnemy {
   public spawnerId: number = -1; // -1 means not spawned from a spawner
 
-  private targetX: number = 0;
-  private targetY: number = 0;
-  private hitFlashTime: number = 0;
-
   constructor(x: number, y: number, spawnerId: number = -1, hp: number = ENEMY_HP) {
-    this.x = x;
-    this.y = y;
-    this.hp = hp;
+    super(x, y, hp);
     this.spawnerId = spawnerId;
-
-    this.graphics = new Graphics();
-    this.draw();
-    this.updatePosition();
   }
 
-  private draw(): void {
+  protected getSpeed(): number {
+    return ENEMY_SPEED;
+  }
+
+  protected draw(): void {
     this.graphics.clear();
 
     const color = this.hitFlashTime > 0 ? 0xffffff : ENEMY_COLOR;
@@ -59,49 +48,6 @@ export class Enemy {
     // Pulsing outline
     this.graphics.circle(0, 0, ENEMY_SIZE / 2 + 2);
     this.graphics.stroke({ width: 2, color: 0xff0000, alpha: 0.5 });
-  }
-
-  private updatePosition(): void {
-    this.graphics.x = this.x;
-    this.graphics.y = this.y;
-  }
-
-  update(deltaTime: number, playerX: number, playerY: number): void {
-    this.targetX = playerX;
-    this.targetY = playerY;
-
-    // Move towards player
-    const dx = playerX - this.x;
-    const dy = playerY - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist > 1) {
-      this.x += (dx / dist) * ENEMY_SPEED * deltaTime;
-      this.y += (dy / dist) * ENEMY_SPEED * deltaTime;
-    }
-
-    // Update hit flash
-    if (this.hitFlashTime > 0) {
-      this.hitFlashTime -= deltaTime;
-    }
-
-    this.draw();
-    this.updatePosition();
-  }
-
-  takeDamage(amount: number): boolean {
-    this.hp -= amount;
-    this.hitFlashTime = 0.1;
-
-    if (this.hp <= 0) {
-      this.active = false;
-      return true; // Enemy died
-    }
-    return false;
-  }
-
-  destroy(): void {
-    this.graphics.destroy();
   }
 
   get radius(): number {

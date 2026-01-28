@@ -1,4 +1,3 @@
-import { Graphics } from 'pixi.js';
 import {
   ENEMY_SIZE,
   ENEMY_SPEED,
@@ -7,35 +6,32 @@ import {
   ELITE_SIZE_MULTIPLIER,
   ELITE_COLOR,
 } from './constants';
+import { BaseEnemy } from './BaseEnemy';
 
-export class EliteEnemy {
-  public graphics: Graphics;
-  public x: number;
-  public y: number;
-  public hp: number;
+export class EliteEnemy extends BaseEnemy {
   public maxHp: number;
-  public active: boolean = true;
   public isElite: boolean = true;
 
-  private targetX: number = 0;
-  private targetY: number = 0;
-  private hitFlashTime: number = 0;
   private pulseTime: number = 0;
   private size: number;
 
   constructor(x: number, y: number, baseHp: number = ENEMY_HP) {
-    this.x = x;
-    this.y = y;
-    this.hp = baseHp * ELITE_HP_MULTIPLIER;
-    this.maxHp = this.hp;
+    const eliteHp = baseHp * ELITE_HP_MULTIPLIER;
+    super(x, y, eliteHp);
+    this.maxHp = eliteHp;
     this.size = ENEMY_SIZE * ELITE_SIZE_MULTIPLIER;
-
-    this.graphics = new Graphics();
-    this.draw();
-    this.updatePosition();
   }
 
-  private draw(): void {
+  protected getSpeed(): number {
+    return ENEMY_SPEED * 0.7; // 70% speed of normal enemy
+  }
+
+  update(deltaTime: number, playerX: number, playerY: number): void {
+    this.pulseTime += deltaTime;
+    super.update(deltaTime, playerX, playerY);
+  }
+
+  protected draw(): void {
     this.graphics.clear();
 
     const color = this.hitFlashTime > 0 ? 0xffffff : ELITE_COLOR;
@@ -107,51 +103,6 @@ export class EliteEnemy {
     // HP bar border
     this.graphics.rect(-barWidth / 2, barY, barWidth, barHeight);
     this.graphics.stroke({ width: 1, color: 0xffffff });
-  }
-
-  private updatePosition(): void {
-    this.graphics.x = this.x;
-    this.graphics.y = this.y;
-  }
-
-  update(deltaTime: number, playerX: number, playerY: number): void {
-    this.targetX = playerX;
-    this.targetY = playerY;
-    this.pulseTime += deltaTime;
-
-    // Move towards player (slightly slower than normal enemy)
-    const dx = playerX - this.x;
-    const dy = playerY - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist > 1) {
-      const speed = ENEMY_SPEED * 0.7; // 70% speed of normal enemy
-      this.x += (dx / dist) * speed * deltaTime;
-      this.y += (dy / dist) * speed * deltaTime;
-    }
-
-    // Update hit flash
-    if (this.hitFlashTime > 0) {
-      this.hitFlashTime -= deltaTime;
-    }
-
-    this.draw();
-    this.updatePosition();
-  }
-
-  takeDamage(amount: number): boolean {
-    this.hp -= amount;
-    this.hitFlashTime = 0.1;
-
-    if (this.hp <= 0) {
-      this.active = false;
-      return true; // Enemy died
-    }
-    return false;
-  }
-
-  destroy(): void {
-    this.graphics.destroy();
   }
 
   get radius(): number {

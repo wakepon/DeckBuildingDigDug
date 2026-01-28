@@ -11,10 +11,8 @@ import {
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
+  BOUNCE_OFFSET,
 } from './constants';
-
-// Offset to move bullet away from wall after bounce (in pixels)
-const BOUNCE_OFFSET = 2;
 
 export class BulletManager {
   public container: Container;

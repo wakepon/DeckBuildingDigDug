@@ -3,12 +3,14 @@
  * Uses vector reflection formula: R = V - 2(V dot N)N
  */
 
+import { BOUNCE_OFFSET } from './constants';
+
 export interface Vector2D {
   x: number;
   y: number;
 }
 
-export interface BounceResult {
+interface BounceResult {
   shouldBounce: boolean;
   newVelocity: Vector2D;
   newX: number;
@@ -64,9 +66,6 @@ export function determineWallNormal(velocity: Vector2D): Vector2D {
     };
   }
 }
-
-// Offset to move bullet away from wall after bounce (in pixels)
-const BOUNCE_OFFSET = 2;
 
 /**
  * Apply bounce logic to a bullet hitting a wall.

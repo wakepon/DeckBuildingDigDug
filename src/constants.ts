@@ -124,9 +124,6 @@ export const FLOOR_ENEMY_HP_SCALE = 0.2; // +20% HP per floor
 export const FLOOR_ENEMY_SPAWN_SCALE = 0.02; // +2% spawn chance per floor
 export const FLOOR_GEM_EXP_SCALE = 0.3; // +30% exp per floor
 
-// Transition settings
-export const TRANSITION_DURATION = 0.5; // seconds for fade
-
 // Level-up settings
 export const EXP_PER_LEVEL_BASE = 10; // Required EXP = 10 × level
 export const UPGRADE_CHOICES = 3; // Number of upgrades to choose from
@@ -145,6 +142,9 @@ export const UPGRADE_BOUNCE = 1; // +1 bounce per upgrade
 
 // Multi-way shot settings
 export const MULTI_WAY_SHOT_ANGLE_SPREAD = (20 * Math.PI) / 180; // 20 degrees in radians
+
+// Bounce settings
+export const BOUNCE_OFFSET = 2; // pixels to offset bullet from wall after bounce
 
 // Multi-way shot damage multipliers by level
 export const MULTI_WAY_SHOT_DAMAGE_MULTIPLIERS: Record<number, number> = {

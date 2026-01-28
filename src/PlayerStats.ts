@@ -32,7 +32,7 @@ export type UpgradeType =
   | 'multiWayShot'
   | 'bounce';
 
-export interface UpgradeInfo {
+interface UpgradeInfo {
   type: UpgradeType;
   name: string;
   description: string;
@@ -226,7 +226,7 @@ export class PlayerStats {
 
   // Apply an upgrade
   applyUpgrade(type: UpgradeType): void {
-    this._acquiredUpgrades.push(type);
+    this._acquiredUpgrades = [...this._acquiredUpgrades, type];
 
     switch (type) {
       case 'attackPower':
@@ -305,8 +305,11 @@ export class PlayerStats {
       return false;
     }
 
-    // Remove from acquired upgrades array
-    this._acquiredUpgrades.splice(index, 1);
+    // Remove from acquired upgrades array (immutably)
+    this._acquiredUpgrades = [
+      ...this._acquiredUpgrades.slice(0, index),
+      ...this._acquiredUpgrades.slice(index + 1)
+    ];
 
     // Revert the stat change, ensuring minimum values
     switch (type) {

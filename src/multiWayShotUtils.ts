@@ -1,6 +1,6 @@
 import { MULTI_WAY_SHOT_ANGLE_SPREAD } from './constants';
 
-export interface BulletDirection {
+interface BulletDirection {
   dirX: number;
   dirY: number;
 }
