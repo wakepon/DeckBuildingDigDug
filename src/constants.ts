@@ -177,4 +177,4 @@ export const CHEST_MAX_UPGRADES = 3;
 export const AUTO_AIM_CONE_ANGLE = (60 * Math.PI) / 180; // 60 degrees in radians (30 degrees each side)
 export const AUTO_AIM_MAX_RANGE = 400; // Maximum targeting range in pixels
 export const AUTO_AIM_TOGGLE_KEY = 'KeyQ'; // Key to toggle auto-aim
-export const AUTO_AIM_DEFAULT_ENABLED = true; // Whether auto-aim is enabled by default
+export const AUTO_AIM_DEFAULT_ENABLED = false; // Whether auto-aim is enabled by default
