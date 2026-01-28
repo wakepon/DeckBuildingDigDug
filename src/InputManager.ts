@@ -1,3 +1,5 @@
+import { AUTO_AIM_TOGGLE_KEY } from './constants';
+
 export class InputManager {
   private keys: Set<string> = new Set();
   private previousKeys: Set<string> = new Set();
@@ -5,6 +7,7 @@ export class InputManager {
   private _mouseY: number = 0;
   private _isMouseDown: boolean = false;
   private canvas: HTMLCanvasElement | null = null;
+  private _lastMoveDirection: { x: number; y: number } = { x: 0, y: 0 };
 
   constructor() {
     this.setupKeyboardListeners();
@@ -107,5 +110,27 @@ export class InputManager {
 
   get isMouseDown(): boolean {
     return this._isMouseDown;
+  }
+
+  // Auto-aim toggle methods
+  isAutoAimTogglePressed(): boolean {
+    return this.keys.has(AUTO_AIM_TOGGLE_KEY);
+  }
+
+  wasAutoAimToggleJustPressed(): boolean {
+    return this.keys.has(AUTO_AIM_TOGGLE_KEY) && !this.previousKeys.has(AUTO_AIM_TOGGLE_KEY);
+  }
+
+  // Last movement direction (for auto-aim when player is stationary)
+  get lastMoveDirection(): { x: number; y: number } {
+    return { ...this._lastMoveDirection };
+  }
+
+  updateLastMoveDirection(): void {
+    const currentDir = this.moveDirection;
+    // Only update if there is actual movement
+    if (currentDir.x !== 0 || currentDir.y !== 0) {
+      this._lastMoveDirection = { ...currentDir };
+    }
   }
 }

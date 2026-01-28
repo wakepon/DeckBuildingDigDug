@@ -201,4 +201,26 @@ export class WallManager {
   public setFloorManager(floorManager: FloorManager): void {
     this.floorManager = floorManager;
   }
+
+  /**
+   * Get center positions of all existing walls (for auto-aim targeting)
+   * @returns Array of {x, y} positions in pixel coordinates
+   */
+  public getWallCenters(): { x: number; y: number }[] {
+    const centers: { x: number; y: number }[] = [];
+
+    for (let y = 0; y < GRID_ROWS; y++) {
+      for (let x = 0; x < GRID_COLS; x++) {
+        const wall = this.walls[y]?.[x];
+        if (wall) {
+          centers.push({
+            x: (x + 0.5) * TILE_SIZE,
+            y: (y + 0.5) * TILE_SIZE,
+          });
+        }
+      }
+    }
+
+    return centers;
+  }
 }

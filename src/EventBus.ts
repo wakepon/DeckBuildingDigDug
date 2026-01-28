@@ -17,7 +17,8 @@ export type GameEvent =
   | { type: 'OXYGEN_WARNING'; ratio: number }
   | { type: 'OXYGEN_DEPLETED' }
   | { type: 'GEM_COLLECTED'; exp: number }
-  | { type: 'OXYGEN_TANK_COLLECTED'; amount: number };
+  | { type: 'OXYGEN_TANK_COLLECTED'; amount: number }
+  | { type: 'AUTO_AIM_TOGGLED'; enabled: boolean };
 
 type EventCallback<T extends GameEvent = GameEvent> = (event: T) => void;
 

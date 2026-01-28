@@ -18,6 +18,7 @@ import {
   UPGRADE_BOUNCE,
   MULTI_WAY_SHOT_DAMAGE_MULTIPLIERS,
   MULTI_WAY_SHOT_BULLET_COUNTS,
+  AUTO_AIM_DEFAULT_ENABLED,
 } from './constants';
 
 export type UpgradeType =
@@ -156,6 +157,9 @@ export class PlayerStats {
   private _multiWayShotLevel: number = 1;
   private _bounceCount: number = 0;
 
+  // Auto-aim state
+  private _autoAimEnabled: boolean = AUTO_AIM_DEFAULT_ENABLED;
+
   // Track acquired upgrades (uses immutable pattern for array updates)
   private _acquiredUpgrades: UpgradeType[] = [];
 
@@ -210,6 +214,10 @@ export class PlayerStats {
     return this._bounceCount;
   }
 
+  get autoAimEnabled(): boolean {
+    return this._autoAimEnabled;
+  }
+
   get level(): number {
     return this._level;
   }
@@ -220,6 +228,16 @@ export class PlayerStats {
 
   get acquiredUpgrades(): UpgradeType[] {
     return [...this._acquiredUpgrades];
+  }
+
+  // Auto-aim methods
+  setAutoAimEnabled(enabled: boolean): void {
+    this._autoAimEnabled = enabled;
+  }
+
+  toggleAutoAim(): boolean {
+    this._autoAimEnabled = !this._autoAimEnabled;
+    return this._autoAimEnabled;
   }
 
   // Get required EXP for next level
@@ -378,5 +396,6 @@ export class PlayerStats {
     this._multiWayShotLevel = 1;
     this._bounceCount = 0;
     this._acquiredUpgrades = [];
+    this._autoAimEnabled = AUTO_AIM_DEFAULT_ENABLED;
   }
 }

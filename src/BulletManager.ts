@@ -6,6 +6,7 @@ import { Player } from './Player';
 import { EnemyManager } from './EnemyManager';
 import { PlayerStats } from './PlayerStats';
 import { EventBus } from './EventBus';
+import { AutoAimSystem, Target, TargetType } from './AutoAimSystem';
 import { calculateMultiWayShotDirections } from './multiWayShotUtils';
 import { determineWallNormal } from './bounceUtils';
 import {
@@ -24,6 +25,7 @@ export class BulletManager {
   private playerStats: PlayerStats;
   private eventBus: EventBus;
   private enemyManager: EnemyManager | null = null;
+  private autoAimSystem: AutoAimSystem | null = null;
   private fireCooldown: number = 0;
 
   constructor(
@@ -43,6 +45,40 @@ export class BulletManager {
 
   setEnemyManager(enemyManager: EnemyManager): void {
     this.enemyManager = enemyManager;
+  }
+
+  setAutoAimSystem(autoAimSystem: AutoAimSystem): void {
+    this.autoAimSystem = autoAimSystem;
+  }
+
+  /**
+   * Collect all potential targets for auto-aim
+   * @returns Array of targets (enemies and walls)
+   */
+  getTargets(): Target[] {
+    const targets: Target[] = [];
+
+    // Add active enemies
+    if (this.enemyManager) {
+      for (const enemy of this.enemyManager.getEnemies()) {
+        if (enemy.active) {
+          targets.push({ x: enemy.x, y: enemy.y, type: 'enemy' as TargetType });
+        }
+      }
+
+      for (const elite of this.enemyManager.getEliteEnemies()) {
+        if (elite.active) {
+          targets.push({ x: elite.x, y: elite.y, type: 'enemy' as TargetType });
+        }
+      }
+    }
+
+    // Add wall centers
+    for (const wallCenter of this.wallManager.getWallCenters()) {
+      targets.push({ x: wallCenter.x, y: wallCenter.y, type: 'wall' as TargetType });
+    }
+
+    return targets;
   }
 
   update(deltaTime: number, cameraX: number, cameraY: number): void {
@@ -220,15 +256,48 @@ export class BulletManager {
   }
 
   private fire(cameraX: number, cameraY: number): void {
-    // Calculate direction from player to mouse (in world coordinates)
-    const mouseWorldX = this.inputManager.mouseX - cameraX;
-    const mouseWorldY = this.inputManager.mouseY - cameraY;
+    let dirX: number;
+    let dirY: number;
 
-    const dirX = mouseWorldX - this.player.x;
-    const dirY = mouseWorldY - this.player.y;
+    // Check if auto-aim should be used
+    if (this.autoAimSystem && this.playerStats.autoAimEnabled) {
+      // Use movement direction for auto-aim targeting
+      const moveDir = this.inputManager.moveDirection;
 
-    // Don't fire if mouse is too close
-    if (Math.abs(dirX) < 1 && Math.abs(dirY) < 1) return;
+      // If not moving, use last movement direction
+      const aimMoveX = moveDir.x !== 0 || moveDir.y !== 0
+        ? moveDir.x
+        : this.inputManager.lastMoveDirection.x;
+      const aimMoveY = moveDir.x !== 0 || moveDir.y !== 0
+        ? moveDir.y
+        : this.inputManager.lastMoveDirection.y;
+
+      // Get targets and find best aim direction
+      const targets = this.getTargets();
+      const aimDir = this.autoAimSystem.getAimDirection(
+        this.player.x,
+        this.player.y,
+        aimMoveX,
+        aimMoveY,
+        targets
+      );
+
+      dirX = aimDir.x;
+      dirY = aimDir.y;
+
+      // If no direction (player not moving and no target), don't fire
+      if (dirX === 0 && dirY === 0) return;
+    } else {
+      // Manual aiming: Calculate direction from player to mouse (in world coordinates)
+      const mouseWorldX = this.inputManager.mouseX - cameraX;
+      const mouseWorldY = this.inputManager.mouseY - cameraY;
+
+      dirX = mouseWorldX - this.player.x;
+      dirY = mouseWorldY - this.player.y;
+
+      // Don't fire if mouse is too close
+      if (Math.abs(dirX) < 1 && Math.abs(dirY) < 1) return;
+    }
 
     // Calculate multiple bullet directions based on multi-way shot bullet count
     const directions = calculateMultiWayShotDirections(

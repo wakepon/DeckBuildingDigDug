@@ -19,6 +19,7 @@ import { PlayerStats } from './PlayerStats';
 import { UpgradeSystem } from './UpgradeSystem';
 import { StatsDisplay } from './StatsDisplay';
 import { DebugWindow } from './DebugWindow';
+import { AutoAimSystem } from './AutoAimSystem';
 
 export class Game {
   private app: Application;
@@ -42,6 +43,7 @@ export class Game {
   private upgradeSystem!: UpgradeSystem;
   private statsDisplay!: StatsDisplay;
   private debugWindow!: DebugWindow;
+  private autoAimSystem!: AutoAimSystem;
   private isTransitioning: boolean = false;
   private isPaused: boolean = false;
 
@@ -134,11 +136,16 @@ export class Game {
       this.statsDisplay.updateDisplay();
     });
 
+    // Initialize auto-aim system
+    this.autoAimSystem = new AutoAimSystem();
+    this.autoAimSystem.setEnabled(this.playerStats.autoAimEnabled);
+
     // Initialize UI
     this.ui = new UI();
 
     // Connect managers
     this.bulletManager.setEnemyManager(this.enemyManager);
+    this.bulletManager.setAutoAimSystem(this.autoAimSystem);
 
     // Setup EventBus listeners
     this.setupEventListeners();
@@ -263,6 +270,16 @@ export class Game {
     if (this.inputManager.wasDebugKeyJustPressed()) {
       this.debugWindow.toggle();
     }
+
+    // Check for auto-aim toggle (Q key)
+    if (this.inputManager.wasAutoAimToggleJustPressed()) {
+      const newState = this.playerStats.toggleAutoAim();
+      this.autoAimSystem.setEnabled(newState);
+      this.eventBus.emit({ type: 'AUTO_AIM_TOGGLED', enabled: newState });
+    }
+
+    // Update last move direction for auto-aim
+    this.inputManager.updateLastMoveDirection();
 
     // Update previous keys state at the end of frame processing for input
     this.inputManager.updatePreviousKeys();

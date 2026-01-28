@@ -172,3 +172,9 @@ export const CHEST_SIZE = 28;
 export const CHEST_COLOR = 0xffd700; // Gold
 export const CHEST_MIN_UPGRADES = 1;
 export const CHEST_MAX_UPGRADES = 3;
+
+// Auto-aim settings
+export const AUTO_AIM_CONE_ANGLE = (60 * Math.PI) / 180; // 60 degrees in radians (30 degrees each side)
+export const AUTO_AIM_MAX_RANGE = 400; // Maximum targeting range in pixels
+export const AUTO_AIM_TOGGLE_KEY = 'KeyQ'; // Key to toggle auto-aim
+export const AUTO_AIM_DEFAULT_ENABLED = true; // Whether auto-aim is enabled by default
