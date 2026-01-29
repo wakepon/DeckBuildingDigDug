@@ -149,9 +149,10 @@ export class InputManager {
     cameraY: number
   ): { x: number; y: number } {
     // Convert mouse screen coordinates to world coordinates
-    // Mouse world position = mouse screen position + camera offset
-    const mouseWorldX = this._mouseX + cameraX;
-    const mouseWorldY = this._mouseY + cameraY;
+    // Mouse world position = mouse screen position - camera offset
+    // (camera offset is negative when player moves right/down, so subtracting adds)
+    const mouseWorldX = this._mouseX - cameraX;
+    const mouseWorldY = this._mouseY - cameraY;
 
     // Calculate vector from player to mouse
     const dx = mouseWorldX - playerX;

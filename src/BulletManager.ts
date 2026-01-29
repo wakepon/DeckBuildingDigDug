@@ -290,8 +290,9 @@ export class BulletManager {
       if (dirX === 0 && dirY === 0) return;
     } else {
       // Manual aiming: Calculate direction from player to mouse (in world coordinates)
-      const mouseWorldX = this.inputManager.mouseX + cameraX;
-      const mouseWorldY = this.inputManager.mouseY + cameraY;
+      // Screen to world: subtract camera offset (camera offset is negative when player moves right/down)
+      const mouseWorldX = this.inputManager.mouseX - cameraX;
+      const mouseWorldY = this.inputManager.mouseY - cameraY;
 
       dirX = mouseWorldX - this.player.x;
       dirY = mouseWorldY - this.player.y;
