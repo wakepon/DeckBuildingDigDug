@@ -65,25 +65,45 @@ export class Camera {
   }
 
   /**
+   * Calculate camera position for one axis.
+   * When world is smaller than screen, centers the world.
+   * When world is larger, clamps to bounds.
+   */
+  private calculateAxisPosition(
+    worldSize: number,
+    screenSize: number,
+    desiredPosition: number
+  ): number {
+    if (worldSize < screenSize) {
+      // World smaller than screen: center the world
+      return (screenSize - worldSize) / 2;
+    }
+    // World larger than or equal to screen: clamp to bounds
+    const minPos = screenSize - worldSize;
+    const maxPos = 0;
+    return Math.max(minPos, Math.min(maxPos, desiredPosition));
+  }
+
+  /**
    * Update camera to follow a target, keeping it centered on screen.
    * Camera position is clamped to world bounds to prevent showing beyond world edges.
+   * When world is smaller than screen, the world is centered on screen.
    */
   follow(targetX: number, targetY: number): void {
     // Calculate desired camera position to center target on screen
     const desiredX = this._screenWidth / 2 - targetX;
     const desiredY = this._screenHeight / 2 - targetY;
 
-    // Calculate bounds
-    // minX/minY: maximum negative offset (showing right/bottom of world)
-    // maxX/maxY: minimum offset (0, showing left/top of world)
-    const minX = this._screenWidth - this._worldWidth;
-    const maxX = 0;
-    const minY = this._screenHeight - this._worldHeight;
-    const maxY = 0;
-
-    // Clamp camera position to bounds
-    this._x = Math.max(minX, Math.min(maxX, desiredX));
-    this._y = Math.max(minY, Math.min(maxY, desiredY));
+    this._x = this.calculateAxisPosition(
+      this._worldWidth,
+      this._screenWidth,
+      desiredX
+    );
+    this._y = this.calculateAxisPosition(
+      this._worldHeight,
+      this._screenHeight,
+      desiredY
+    );
   }
 
   /**
@@ -111,18 +131,22 @@ export class Camera {
   /**
    * Update world dimensions and re-clamp camera position.
    * Used when transitioning to floors with different sizes.
+   * When world is smaller than screen, the world is centered on screen.
    */
   updateWorldSize(worldWidth: number, worldHeight: number): void {
     this._worldWidth = worldWidth;
     this._worldHeight = worldHeight;
 
-    // Re-clamp position with new bounds
-    const minX = this._screenWidth - this._worldWidth;
-    const maxX = 0;
-    const minY = this._screenHeight - this._worldHeight;
-    const maxY = 0;
-
-    this._x = Math.max(minX, Math.min(maxX, this._x));
-    this._y = Math.max(minY, Math.min(maxY, this._y));
+    // Re-calculate position with new world bounds (use current position as desired)
+    this._x = this.calculateAxisPosition(
+      this._worldWidth,
+      this._screenWidth,
+      this._x
+    );
+    this._y = this.calculateAxisPosition(
+      this._worldHeight,
+      this._screenHeight,
+      this._y
+    );
   }
 }

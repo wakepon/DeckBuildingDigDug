@@ -113,17 +113,77 @@ describe('Camera', () => {
       expect(smallCamera.y).toBe(0);
     });
 
-    it('should handle world smaller than screen', () => {
+    it('should center world smaller than screen on both axes', () => {
+      // World is 400x300, screen is 800x600
+      // World should be centered: offset = (screen - world) / 2
       const smallWorldCamera = new Camera(800, 600, 400, 300);
 
       smallWorldCamera.follow(200, 150);
 
-      // minX = 800 - 400 = 400, maxX = 0
-      // Since minX > maxX, clamp keeps it at maxX = 0 or minX = 400
-      // This is an edge case - world should not be smaller than screen
-      // But camera should not crash
-      expect(smallWorldCamera.x).toBeDefined();
-      expect(smallWorldCamera.y).toBeDefined();
+      // Expected: x = (800 - 400) / 2 = 200 (centers 400px world in 800px screen)
+      // Expected: y = (600 - 300) / 2 = 150 (centers 300px world in 600px screen)
+      expect(smallWorldCamera.x).toBe(200);
+      expect(smallWorldCamera.y).toBe(150);
+    });
+
+    it('should keep small world centered regardless of player position', () => {
+      // World is smaller than screen - should always be centered
+      const smallWorldCamera = new Camera(800, 600, 400, 300);
+
+      // Player at different positions within small world
+      smallWorldCamera.follow(0, 0);
+      expect(smallWorldCamera.x).toBe(200);
+      expect(smallWorldCamera.y).toBe(150);
+
+      smallWorldCamera.follow(400, 300);
+      expect(smallWorldCamera.x).toBe(200);
+      expect(smallWorldCamera.y).toBe(150);
+
+      smallWorldCamera.follow(200, 150);
+      expect(smallWorldCamera.x).toBe(200);
+      expect(smallWorldCamera.y).toBe(150);
+    });
+
+    it('should center world smaller in one dimension only (width smaller)', () => {
+      // Width smaller than screen (640 < 800), height larger (700 > 600)
+      const camera = new Camera(800, 600, 640, 700);
+
+      camera.follow(320, 350);
+
+      // X: world < screen, should center: (800 - 640) / 2 = 80
+      expect(camera.x).toBe(80);
+      // Y: world > screen, should use normal clamping
+      // desiredY = 300 - 350 = -50, minY = 600 - 700 = -100, maxY = 0
+      // clamped: Math.max(-100, Math.min(0, -50)) = -50
+      expect(camera.y).toBe(-50);
+    });
+
+    it('should center world smaller in one dimension only (height smaller)', () => {
+      // Width larger than screen (1000 > 800), height smaller (440 < 600)
+      const camera = new Camera(800, 600, 1000, 440);
+
+      camera.follow(500, 220);
+
+      // X: world > screen, should use normal clamping
+      // desiredX = 400 - 500 = -100, minX = 800 - 1000 = -200, maxX = 0
+      // clamped: Math.max(-200, Math.min(0, -100)) = -100
+      expect(camera.x).toBe(-100);
+      // Y: world < screen, should center: (600 - 440) / 2 = 80
+      expect(camera.y).toBe(80);
+    });
+
+    it('should center Floor 1 sized world (640x440)', () => {
+      // Floor 1: 16 tiles * 40px = 640px width, 11 tiles * 40px = 440px height
+      // Both dimensions smaller than 800x600 screen
+      const floor1Camera = new Camera(800, 600, 640, 440);
+
+      // Player at center of floor
+      floor1Camera.follow(320, 220);
+
+      // Expected: x = (800 - 640) / 2 = 80
+      // Expected: y = (600 - 440) / 2 = 80
+      expect(floor1Camera.x).toBe(80);
+      expect(floor1Camera.y).toBe(80);
     });
 
     it('should handle negative target coordinates', () => {
@@ -208,6 +268,36 @@ describe('Camera', () => {
       // minX is now: 800 - 1000 = -200
       // Camera should be re-clamped
       expect(camera.x).toBe(-200);
+    });
+
+    it('should center when updated to world smaller than screen', () => {
+      // Start with large world
+      camera.follow(800, 600);
+      expect(camera.x).toBe(-400);
+      expect(camera.y).toBe(-300);
+
+      // Update to small world (Floor 1 size)
+      camera.updateWorldSize(640, 440);
+
+      // Should center the small world
+      // x = (800 - 640) / 2 = 80
+      // y = (600 - 440) / 2 = 80
+      expect(camera.x).toBe(80);
+      expect(camera.y).toBe(80);
+    });
+
+    it('should handle mixed dimension update (one smaller, one larger)', () => {
+      camera.follow(800, 600);
+
+      // Update to world with width smaller, height larger
+      camera.updateWorldSize(640, 1200);
+
+      // X: world < screen, center: (800 - 640) / 2 = 80
+      expect(camera.x).toBe(80);
+      // Y: world > screen, clamp: current _y should be re-clamped
+      // Previous _y was -300, minY = 600 - 1200 = -600, maxY = 0
+      // -300 is within bounds, should stay at -300
+      expect(camera.y).toBe(-300);
     });
   });
 });

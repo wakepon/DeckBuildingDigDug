@@ -20,13 +20,10 @@ describe('Floor Size Constants', () => {
       expect(FLOOR_SIZE_SCALING.BASE_ROWS).toBeGreaterThan(0);
     });
 
-    it('should have base dimensions that fit on screen', () => {
-      // Base floor should be at least screen size
-      const baseWidth = FLOOR_SIZE_SCALING.BASE_COLS * TILE_SIZE;
-      const baseHeight = FLOOR_SIZE_SCALING.BASE_ROWS * TILE_SIZE;
-
-      expect(baseWidth).toBeGreaterThanOrEqual(SCREEN_WIDTH);
-      expect(baseHeight).toBeGreaterThanOrEqual(SCREEN_HEIGHT);
+    it('should have base dimensions smaller than max grid', () => {
+      // Base floor starts smaller and scales up as player progresses
+      expect(FLOOR_SIZE_SCALING.BASE_COLS).toBeLessThan(GRID_COLS);
+      expect(FLOOR_SIZE_SCALING.BASE_ROWS).toBeLessThan(GRID_ROWS);
     });
 
     it('should have COLS_PER_FLOOR defined for scaling', () => {

@@ -129,10 +129,10 @@ export const FLOOR_GEM_EXP_SCALE = 0.3; // +30% exp per floor
 // Floor size scaling constants
 // Floors start smaller and grow larger as player progresses
 export const FLOOR_SIZE_SCALING = {
-  BASE_COLS: 20,             // Starting grid columns on floor 1
-  BASE_ROWS: 15,             // Starting grid rows on floor 1
-  COLS_PER_FLOOR: 2.5,       // Additional columns per floor (reaches 40 by floor ~9)
-  ROWS_PER_FLOOR: 1.875,     // Additional rows per floor (reaches 30 by floor ~9)
+  BASE_COLS: 16,             // Starting grid columns on floor 1
+  BASE_ROWS: 11,             // Starting grid rows on floor 1
+  COLS_PER_FLOOR: 24 / 9,    // Additional columns per floor (reaches 40 by floor 10)
+  ROWS_PER_FLOOR: 19 / 9,    // Additional rows per floor (reaches 30 by floor 10)
   MAX_FLOOR_FOR_SCALING: 10, // Floor at which max size is reached
 };
 
