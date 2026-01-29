@@ -11,7 +11,9 @@ export class Bullet {
   public active: boolean = true;
   public penetrationRemaining: number;
   private _bounceRemaining: number;
+  private _pierceEnemyRemaining: number;
   private size: number;
+  private hitEnemies: Set<string> = new Set();
 
   constructor(
     x: number,
@@ -20,13 +22,15 @@ export class Bullet {
     dirY: number,
     size: number = BULLET_SIZE,
     penetration: number = 0,
-    bounce: number = 0
+    bounce: number = 0,
+    pierceEnemy: number = 0
   ) {
     this.x = x;
     this.y = y;
     this.size = size;
     this.penetrationRemaining = penetration;
     this._bounceRemaining = bounce;
+    this._pierceEnemyRemaining = pierceEnemy;
 
     // Normalize direction and apply speed
     const length = Math.sqrt(dirX * dirX + dirY * dirY);
@@ -49,6 +53,41 @@ export class Bullet {
 
   get hasBounce(): boolean {
     return this._bounceRemaining > 0;
+  }
+
+  get pierceEnemyRemaining(): number {
+    return this._pierceEnemyRemaining;
+  }
+
+  set pierceEnemyRemaining(value: number) {
+    this._pierceEnemyRemaining = value;
+    this.draw();
+  }
+
+  get canPierceEnemy(): boolean {
+    return this._pierceEnemyRemaining > 0;
+  }
+
+  /**
+   * Check if this bullet has already hit a specific enemy
+   */
+  hasHitEnemy(enemyId: string): boolean {
+    return this.hitEnemies.has(enemyId);
+  }
+
+  /**
+   * Record that this bullet has hit an enemy to prevent double damage
+   */
+  recordEnemyHit(enemyId: string): void {
+    this.hitEnemies.add(enemyId);
+  }
+
+  /**
+   * Get the set of enemy IDs this bullet has hit
+   * Used for filtering collision checks
+   */
+  getHitEnemies(): Set<string> {
+    return new Set(this.hitEnemies);
   }
 
   private draw(): void {
@@ -76,6 +115,12 @@ export class Bullet {
     if (this._bounceRemaining > 0) {
       this.graphics.circle(0, 0, this.size / 2 + 6);
       this.graphics.stroke({ width: 2, color: 0x44ff88, alpha: 0.6 });
+    }
+
+    // Pierce enemy indicator (red-orange ring if piercing enemies)
+    if (this._pierceEnemyRemaining > 0) {
+      this.graphics.circle(0, 0, this.size / 2 + 8);
+      this.graphics.stroke({ width: 2, color: 0xff6600, alpha: 0.6 });
     }
   }
 

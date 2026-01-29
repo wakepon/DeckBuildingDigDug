@@ -16,6 +16,7 @@ import {
   UPGRADE_GEM_ATTRACT,
   UPGRADE_MULTI_WAY_SHOT,
   UPGRADE_BOUNCE,
+  UPGRADE_PIERCE_ENEMY,
   MULTI_WAY_SHOT_DAMAGE_MULTIPLIERS,
   MULTI_WAY_SHOT_BULLET_COUNTS,
   AUTO_AIM_DEFAULT_ENABLED,
@@ -31,7 +32,8 @@ export type UpgradeType =
   | 'penetration'
   | 'gemAttract'
   | 'multiWayShot'
-  | 'bounce';
+  | 'bounce'
+  | 'pierceEnemy';
 
 interface UpgradeInfo {
   type: UpgradeType;
@@ -123,6 +125,14 @@ export const UPGRADE_DATA: Record<UpgradeType, UpgradeInfo> = {
     color: 0x44ff88,
     maxLevel: 3,
   },
+  pierceEnemy: {
+    type: 'pierceEnemy',
+    name: '敵貫通',
+    description: '敵を2体貫通',
+    icon: '⟫',
+    color: 0xff6600,
+    maxLevel: 3,
+  },
 };
 
 /**
@@ -156,6 +166,7 @@ export class PlayerStats {
   private gemAttractMultiplier: number = 1;
   private _multiWayShotLevel: number = 1;
   private _bounceCount: number = 0;
+  private _pierceEnemyCount: number = 0;
 
   // Auto-aim state
   private _autoAimEnabled: boolean = AUTO_AIM_DEFAULT_ENABLED;
@@ -212,6 +223,10 @@ export class PlayerStats {
 
   get bounceCount(): number {
     return this._bounceCount;
+  }
+
+  get pierceEnemyCount(): number {
+    return this._pierceEnemyCount;
   }
 
   get autoAimEnabled(): boolean {
@@ -291,6 +306,9 @@ export class PlayerStats {
         break;
       case 'bounce':
         this._bounceCount += UPGRADE_BOUNCE;
+        break;
+      case 'pierceEnemy':
+        this._pierceEnemyCount += UPGRADE_PIERCE_ENEMY;
         break;
     }
   }
@@ -376,6 +394,9 @@ export class PlayerStats {
       case 'bounce':
         this._bounceCount = Math.max(0, this._bounceCount - UPGRADE_BOUNCE);
         break;
+      case 'pierceEnemy':
+        this._pierceEnemyCount = Math.max(0, this._pierceEnemyCount - UPGRADE_PIERCE_ENEMY);
+        break;
     }
 
     return true;
@@ -395,6 +416,7 @@ export class PlayerStats {
     this.gemAttractMultiplier = 1;
     this._multiWayShotLevel = 1;
     this._bounceCount = 0;
+    this._pierceEnemyCount = 0;
     this._acquiredUpgrades = [];
     this._autoAimEnabled = AUTO_AIM_DEFAULT_ENABLED;
   }

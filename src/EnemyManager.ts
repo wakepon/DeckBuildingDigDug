@@ -240,32 +240,45 @@ export class EnemyManager {
     return this.eliteEnemies;
   }
 
-  damageEnemyAt(x: number, y: number, radius: number, damage: number): boolean {
+  /**
+   * Damage an enemy at the given position.
+   * @param excludeIds - Set of enemy IDs to exclude from collision check
+   * @returns The enemy ID if hit, null if no enemy was hit
+   */
+  damageEnemyAt(
+    x: number,
+    y: number,
+    radius: number,
+    damage: number,
+    excludeIds?: Set<string>
+  ): string | null {
     // Check normal enemies
     for (const enemy of this.enemies) {
       if (!enemy.active) continue;
+      if (excludeIds && excludeIds.has(enemy.id)) continue;
 
       const dist = getDistance(enemy.x, enemy.y, x, y);
 
       if (dist < radius + enemy.radius) {
         enemy.takeDamage(damage);
-        return true;
+        return enemy.id;
       }
     }
 
     // Check elite enemies
     for (const elite of this.eliteEnemies) {
       if (!elite.active) continue;
+      if (excludeIds && excludeIds.has(elite.id)) continue;
 
       const dist = getDistance(elite.x, elite.y, x, y);
 
       if (dist < radius + elite.radius) {
         elite.takeDamage(damage);
-        return true;
+        return elite.id;
       }
     }
 
-    return false;
+    return null;
   }
 
   clear(): void {

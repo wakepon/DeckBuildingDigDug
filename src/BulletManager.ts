@@ -111,15 +111,26 @@ export class BulletManager {
       if (this.enemyManager) {
         const damage = this.playerStats.attackPower * this.playerStats.multiWayShotDamageMultiplier;
         const bulletRadius = this.playerStats.bulletSize / 2;
-        const hitEnemy = this.enemyManager.damageEnemyAt(
+        const hitEnemyId = this.enemyManager.damageEnemyAt(
           bullet.x,
           bullet.y,
           bulletRadius,
-          damage
+          damage,
+          bullet.getHitEnemies()
         );
-        if (hitEnemy) {
-          this.removeBullet(i);
-          continue;
+        if (hitEnemyId) {
+          // Record this enemy as hit to prevent double damage
+          bullet.recordEnemyHit(hitEnemyId);
+
+          // Check if bullet can pierce through
+          if (bullet.canPierceEnemy) {
+            bullet.pierceEnemyRemaining--;
+            // Bullet continues through enemy
+          } else {
+            // No pierce remaining - remove bullet
+            this.removeBullet(i);
+            continue;
+          }
         }
       }
 
@@ -325,7 +336,8 @@ export class BulletManager {
         direction.dirY,
         this.playerStats.bulletSize,
         this.playerStats.penetrationCount,
-        this.playerStats.bounceCount
+        this.playerStats.bounceCount,
+        this.playerStats.pierceEnemyCount
       );
       this.bullets.push(bullet);
       this.container.addChild(bullet.graphics);

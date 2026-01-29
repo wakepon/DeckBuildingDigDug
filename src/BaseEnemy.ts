@@ -6,6 +6,8 @@ import { getDistance } from './utils/math';
  * Consolidates common movement, damage, and lifecycle logic
  */
 export abstract class BaseEnemy {
+  private static nextId: number = 0;
+  public readonly id: string;
   public graphics: Graphics;
   public x: number;
   public y: number;
@@ -17,6 +19,7 @@ export abstract class BaseEnemy {
   protected hitFlashTime: number = 0;
 
   constructor(x: number, y: number, hp: number) {
+    this.id = `enemy-${BaseEnemy.nextId++}`;
     this.x = x;
     this.y = y;
     this.hp = hp;
