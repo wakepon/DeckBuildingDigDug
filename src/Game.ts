@@ -22,6 +22,7 @@ import { StatsDisplay } from './StatsDisplay';
 import { DebugWindow } from './DebugWindow';
 import { AutoAimSystem } from './AutoAimSystem';
 import { Crosshair } from './Crosshair';
+import { FloorRenderer } from './FloorRenderer';
 
 export class Game {
   private app: Application;
@@ -48,6 +49,7 @@ export class Game {
   private autoAimSystem!: AutoAimSystem;
   private crosshair!: Crosshair;
   private camera!: Camera;
+  private floorRenderer!: FloorRenderer;
   private isTransitioning: boolean = false;
   private isPaused: boolean = false;
 
@@ -164,6 +166,9 @@ export class Game {
     const worldDims = this.floorManager.getFloorWorldDimensions();
     this.camera = new Camera(SCREEN_WIDTH, SCREEN_HEIGHT, worldDims.width, worldDims.height);
 
+    // Initialize floor renderer with dungeon stone pattern
+    this.floorRenderer = new FloorRenderer(worldDims.width, worldDims.height);
+
     // Connect managers
     this.bulletManager.setEnemyManager(this.enemyManager);
     this.bulletManager.setAutoAimSystem(this.autoAimSystem);
@@ -179,6 +184,8 @@ export class Game {
     this.oxygenTankManager.spawnInitialTanks();
 
     // Build scene hierarchy
+    // Floor renderer is at the very bottom (index 0)
+    this.gameContainer.addChild(this.floorRenderer.container);
     // Enemies are drawn below walls so they're hidden behind walls
     this.gameContainer.addChild(this.enemyManager.container);
     this.gameContainer.addChild(this.wallManager.container);
@@ -395,8 +402,8 @@ export class Game {
 
     const stairsPos = this.wallManager.stairsPosition;
     this.stairs = new Stairs(stairsPos.x, stairsPos.y);
-    // Add stairs after walls but before other objects
-    this.gameContainer.addChildAt(this.stairs.graphics, 1);
+    // Add stairs after walls but before other objects (index 3: after floor, enemies, walls)
+    this.gameContainer.addChildAt(this.stairs.graphics, 3);
 
     // Get dynamic spawn center from floor manager
     const spawnCenter = this.floorManager.getFloorSpawnCenter();
@@ -442,6 +449,7 @@ export class Game {
     this.camera.updateWorldSize(worldDims.width, worldDims.height);
     this.bulletManager.setWorldSize(worldDims.width, worldDims.height);
     this.enemyManager.setWorldSize(worldDims.width, worldDims.height);
+    this.floorRenderer.updateSize(worldDims.width, worldDims.height);
 
     // Reset camera to spawn position
     this.gameContainer.x = 0;

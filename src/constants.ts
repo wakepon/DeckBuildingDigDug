@@ -195,3 +195,13 @@ export const AUTO_AIM_CONE_ANGLE = (60 * Math.PI) / 180; // 60 degrees in radian
 export const AUTO_AIM_MAX_RANGE = 400; // Maximum targeting range in pixels
 export const AUTO_AIM_TOGGLE_KEY = 'KeyQ'; // Key to toggle auto-aim
 export const AUTO_AIM_DEFAULT_ENABLED = false; // Whether auto-aim is enabled by default
+
+// Floor pattern settings (dungeon stone tile pattern)
+export const FLOOR_PATTERN = {
+  BASE_COLOR: 0x1a1a2e,       // Dark blue-gray base color
+  GROUT_COLOR: 0x0d0d1a,      // Darker grout between tiles
+  HIGHLIGHT_COLOR: 0x2a2a4e,  // Subtle highlight on tile edges
+  GROUT_WIDTH: 2,             // Width of grout lines in pixels
+  COLOR_VARIATION: 0x080808,  // Amount of color variation per tile
+  HIGHLIGHT_ALPHA: 0.3,       // Alpha for highlight edges
+};
