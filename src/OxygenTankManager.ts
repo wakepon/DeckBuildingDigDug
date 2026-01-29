@@ -7,18 +7,35 @@ import {
   OXYGEN_TANK_INITIAL_COUNT,
   OXYGEN_MAX,
   TILE_SIZE,
-  PLAYER_SPAWN_CENTER_X,
-  PLAYER_SPAWN_CENTER_Y,
+  FLOOR_SIZE_SCALING,
 } from './constants';
+
+// Interface for spawn center position (grid coordinates)
+interface SpawnCenter {
+  x: number;
+  y: number;
+}
 
 export class OxygenTankManager {
   public container: Container;
   private tanks: OxygenTank[] = [];
   private eventBus: EventBus;
+  private spawnCenterX: number;
+  private spawnCenterY: number;
 
-  constructor(eventBus: EventBus) {
+  constructor(eventBus: EventBus, spawnCenter?: SpawnCenter) {
     this.eventBus = eventBus;
     this.container = new Container();
+
+    // Use provided spawn center or default to floor 1 center
+    this.spawnCenterX = spawnCenter?.x ?? Math.floor(FLOOR_SIZE_SCALING.BASE_COLS / 2);
+    this.spawnCenterY = spawnCenter?.y ?? Math.floor(FLOOR_SIZE_SCALING.BASE_ROWS / 2);
+  }
+
+  // Update spawn center for floor transitions
+  setSpawnCenter(spawnCenter: SpawnCenter): void {
+    this.spawnCenterX = spawnCenter.x;
+    this.spawnCenterY = spawnCenter.y;
   }
 
   // Called at floor start to place tanks in safe zone
@@ -31,10 +48,11 @@ export class OxygenTankManager {
     }
   }
 
-  private getSafeZonePositions(): { x: number; y: number }[] {
+  // Made public for testing purposes
+  getSafeZonePositions(): { x: number; y: number }[] {
     const positions: { x: number; y: number }[] = [];
-    const centerX = (PLAYER_SPAWN_CENTER_X + 0.5) * TILE_SIZE;
-    const centerY = (PLAYER_SPAWN_CENTER_Y + 0.5) * TILE_SIZE;
+    const centerX = (this.spawnCenterX + 0.5) * TILE_SIZE;
+    const centerY = (this.spawnCenterY + 0.5) * TILE_SIZE;
 
     // Place tanks in corners of safe zone
     const offset = TILE_SIZE * 0.8;

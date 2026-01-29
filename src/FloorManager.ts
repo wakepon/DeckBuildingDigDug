@@ -6,7 +6,26 @@ import {
   FLOOR_ENEMY_SPAWN_SCALE,
   FLOOR_GEM_EXP_SCALE,
   WALL_HP_SCALING,
+  GRID_COLS,
+  GRID_ROWS,
+  TILE_SIZE,
+  FLOOR_SIZE_SCALING,
 } from './constants';
+
+interface GridDimensions {
+  cols: number;
+  rows: number;
+}
+
+interface WorldDimensions {
+  width: number;
+  height: number;
+}
+
+interface GridPosition {
+  x: number;
+  y: number;
+}
 
 interface HPDistributionEntry {
   hp: number;
@@ -138,5 +157,43 @@ export class FloorManager {
 
     // Fallback to HP 1
     return 1;
+  }
+
+  // Get grid dimensions (columns and rows) for current floor
+  // Floor size grows as player progresses, capped at GRID_COLS/GRID_ROWS
+  getFloorGridDimensions(): GridDimensions {
+    const floor = this._currentFloor;
+    const { BASE_COLS, BASE_ROWS, COLS_PER_FLOOR, ROWS_PER_FLOOR, MAX_FLOOR_FOR_SCALING } = FLOOR_SIZE_SCALING;
+
+    // Calculate scaled dimensions based on floor
+    // Use floor - 1 so floor 1 gets base size
+    const floorsOfScaling = Math.min(floor - 1, MAX_FLOOR_FOR_SCALING - 1);
+
+    const scaledCols = BASE_COLS + floorsOfScaling * COLS_PER_FLOOR;
+    const scaledRows = BASE_ROWS + floorsOfScaling * ROWS_PER_FLOOR;
+
+    // Clamp to max grid dimensions and round to integers
+    const cols = Math.min(Math.round(scaledCols), GRID_COLS);
+    const rows = Math.min(Math.round(scaledRows), GRID_ROWS);
+
+    return { cols, rows };
+  }
+
+  // Get world dimensions in pixels for current floor
+  getFloorWorldDimensions(): WorldDimensions {
+    const { cols, rows } = this.getFloorGridDimensions();
+    return {
+      width: cols * TILE_SIZE,
+      height: rows * TILE_SIZE,
+    };
+  }
+
+  // Get spawn center position (grid coordinates) for current floor
+  getFloorSpawnCenter(): GridPosition {
+    const { cols, rows } = this.getFloorGridDimensions();
+    return {
+      x: Math.floor(cols / 2),
+      y: Math.floor(rows / 2),
+    };
   }
 }

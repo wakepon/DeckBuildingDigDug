@@ -27,6 +27,8 @@ export class BulletManager {
   private enemyManager: EnemyManager | null = null;
   private autoAimSystem: AutoAimSystem | null = null;
   private fireCooldown: number = 0;
+  private worldWidth: number = GRID_COLS * TILE_SIZE;
+  private worldHeight: number = GRID_ROWS * TILE_SIZE;
 
   constructor(
     wallManager: WallManager,
@@ -49,6 +51,15 @@ export class BulletManager {
 
   setAutoAimSystem(autoAimSystem: AutoAimSystem): void {
     this.autoAimSystem = autoAimSystem;
+  }
+
+  /**
+   * Set the world dimensions for bounds checking
+   * Used when floor size changes
+   */
+  setWorldSize(width: number, height: number): void {
+    this.worldWidth = width;
+    this.worldHeight = height;
   }
 
   /**
@@ -165,9 +176,6 @@ export class BulletManager {
    * Returns true if bullet should be removed.
    */
   private handleBoundsCollision(bullet: Bullet): boolean {
-    const worldWidth = GRID_COLS * TILE_SIZE;
-    const worldHeight = GRID_ROWS * TILE_SIZE;
-
     let hitBounds = false;
     let normalX = 0;
     let normalY = 0;
@@ -175,7 +183,7 @@ export class BulletManager {
     if (bullet.x < 0) {
       hitBounds = true;
       normalX = 1; // Facing right
-    } else if (bullet.x > worldWidth) {
+    } else if (bullet.x > this.worldWidth) {
       hitBounds = true;
       normalX = -1; // Facing left
     }
@@ -183,7 +191,7 @@ export class BulletManager {
     if (bullet.y < 0) {
       hitBounds = true;
       normalY = 1; // Facing down
-    } else if (bullet.y > worldHeight) {
+    } else if (bullet.y > this.worldHeight) {
       hitBounds = true;
       normalY = -1; // Facing up
     }
@@ -208,9 +216,9 @@ export class BulletManager {
 
       // Clamp position to within bounds
       if (bullet.x < 0) bullet.setPosition(BOUNCE_OFFSET, bullet.y);
-      if (bullet.x > worldWidth) bullet.setPosition(worldWidth - BOUNCE_OFFSET, bullet.y);
+      if (bullet.x > this.worldWidth) bullet.setPosition(this.worldWidth - BOUNCE_OFFSET, bullet.y);
       if (bullet.y < 0) bullet.setPosition(bullet.x, BOUNCE_OFFSET);
-      if (bullet.y > worldHeight) bullet.setPosition(bullet.x, worldHeight - BOUNCE_OFFSET);
+      if (bullet.y > this.worldHeight) bullet.setPosition(bullet.x, this.worldHeight - BOUNCE_OFFSET);
 
       return false;
     }

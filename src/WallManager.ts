@@ -5,8 +5,6 @@ import {
   TILE_SIZE,
   WALL_COLORS,
   WALL_HP_SCALING,
-  PLAYER_SPAWN_CENTER_X,
-  PLAYER_SPAWN_CENTER_Y,
   PLAYER_SPAWN_RADIUS,
   STAIRS_MIN_DISTANCE,
 } from './constants';
@@ -17,26 +15,76 @@ interface Wall {
   graphics: Graphics;
 }
 
+interface GridDimensions {
+  cols: number;
+  rows: number;
+}
+
+interface WorldDimensions {
+  width: number;
+  height: number;
+}
+
+interface SpawnArea {
+  centerX: number;
+  centerY: number;
+  radius: number;
+}
+
 export class WallManager {
   public container: Container;
   private walls: (Wall | null)[][];
   private _stairsPosition: { x: number; y: number } = { x: 0, y: 0 };
   private floorManager: FloorManager | null = null;
+  private _currentGridCols: number;
+  private _currentGridRows: number;
+  private _spawnCenterX: number;
+  private _spawnCenterY: number;
 
   constructor(floorManager?: FloorManager) {
     this.container = new Container();
     this.walls = [];
     this.floorManager = floorManager || null;
+
+    // Initialize grid dimensions from floor manager or use defaults
+    const dims = this.calculateGridDimensions();
+    this._currentGridCols = dims.cols;
+    this._currentGridRows = dims.rows;
+
+    // Initialize spawn center
+    const spawnCenter = this.calculateSpawnCenter();
+    this._spawnCenterX = spawnCenter.x;
+    this._spawnCenterY = spawnCenter.y;
+
     this.initializeWalls();
+  }
+
+  private calculateGridDimensions(): GridDimensions {
+    if (this.floorManager) {
+      return this.floorManager.getFloorGridDimensions();
+    }
+    // Fallback to max grid size if no floor manager
+    return { cols: GRID_COLS, rows: GRID_ROWS };
+  }
+
+  private calculateSpawnCenter(): { x: number; y: number } {
+    if (this.floorManager) {
+      return this.floorManager.getFloorSpawnCenter();
+    }
+    // Fallback to center of max grid
+    return {
+      x: Math.floor(GRID_COLS / 2),
+      y: Math.floor(GRID_ROWS / 2),
+    };
   }
 
   private initializeWalls(): void {
     // Generate stairs position first
     this._stairsPosition = this.generateStairsPosition();
 
-    for (let y = 0; y < GRID_ROWS; y++) {
+    for (let y = 0; y < this._currentGridRows; y++) {
       this.walls[y] = [];
-      for (let x = 0; x < GRID_COLS; x++) {
+      for (let x = 0; x < this._currentGridCols; x++) {
         // Check if this position is in the player spawn area
         if (this.isPlayerSpawnArea(x, y)) {
           this.walls[y][x] = null;
@@ -54,14 +102,14 @@ export class WallManager {
   private generateStairsPosition(): { x: number; y: number } {
     const validPositions: { x: number; y: number }[] = [];
 
-    for (let y = 0; y < GRID_ROWS; y++) {
-      for (let x = 0; x < GRID_COLS; x++) {
+    for (let y = 0; y < this._currentGridRows; y++) {
+      for (let x = 0; x < this._currentGridCols; x++) {
         // Must not be in spawn area
         if (this.isPlayerSpawnArea(x, y)) continue;
 
         // Must be at least STAIRS_MIN_DISTANCE away from spawn center
-        const dx = Math.abs(x - PLAYER_SPAWN_CENTER_X);
-        const dy = Math.abs(y - PLAYER_SPAWN_CENTER_Y);
+        const dx = Math.abs(x - this._spawnCenterX);
+        const dy = Math.abs(y - this._spawnCenterY);
         const manhattanDist = dx + dy;
 
         if (manhattanDist >= STAIRS_MIN_DISTANCE) {
@@ -75,13 +123,13 @@ export class WallManager {
       return validPositions[Math.floor(Math.random() * validPositions.length)];
     }
 
-    // Fallback: far corner
-    return { x: GRID_COLS - 2, y: GRID_ROWS - 2 };
+    // Fallback: far corner of current floor
+    return { x: this._currentGridCols - 2, y: this._currentGridRows - 2 };
   }
 
   private isPlayerSpawnArea(x: number, y: number): boolean {
-    const dx = Math.abs(x - PLAYER_SPAWN_CENTER_X);
-    const dy = Math.abs(y - PLAYER_SPAWN_CENTER_Y);
+    const dx = Math.abs(x - this._spawnCenterX);
+    const dy = Math.abs(y - this._spawnCenterY);
     return dx <= PLAYER_SPAWN_RADIUS && dy <= PLAYER_SPAWN_RADIUS;
   }
 
@@ -128,10 +176,10 @@ export class WallManager {
   }
 
   public getWall(x: number, y: number): Wall | null {
-    if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) {
+    if (x < 0 || x >= this._currentGridCols || y < 0 || y >= this._currentGridRows) {
       return null;
     }
-    return this.walls[y][x];
+    return this.walls[y]?.[x] ?? null;
   }
 
   public getWallColor(x: number, y: number): number | null {
@@ -170,9 +218,9 @@ export class WallManager {
   }
 
   public reset(): void {
-    // Clear all walls
-    for (let y = 0; y < GRID_ROWS; y++) {
-      for (let x = 0; x < GRID_COLS; x++) {
+    // Clear all walls using current dimensions
+    for (let y = 0; y < this._currentGridRows; y++) {
+      for (let x = 0; x < this._currentGridCols; x++) {
         const wall = this.walls[y]?.[x];
         if (wall) {
           this.container.removeChild(wall.graphics);
@@ -181,6 +229,16 @@ export class WallManager {
       }
     }
     this.walls = [];
+
+    // Recalculate grid dimensions from floor manager
+    const dims = this.calculateGridDimensions();
+    this._currentGridCols = dims.cols;
+    this._currentGridRows = dims.rows;
+
+    // Recalculate spawn center
+    const spawnCenter = this.calculateSpawnCenter();
+    this._spawnCenterX = spawnCenter.x;
+    this._spawnCenterY = spawnCenter.y;
 
     // Reinitialize
     this.initializeWalls();
@@ -209,8 +267,8 @@ export class WallManager {
   public getWallCenters(): { x: number; y: number }[] {
     const centers: { x: number; y: number }[] = [];
 
-    for (let y = 0; y < GRID_ROWS; y++) {
-      for (let x = 0; x < GRID_COLS; x++) {
+    for (let y = 0; y < this._currentGridRows; y++) {
+      for (let x = 0; x < this._currentGridCols; x++) {
         const wall = this.walls[y]?.[x];
         if (wall) {
           centers.push({
@@ -222,5 +280,36 @@ export class WallManager {
     }
 
     return centers;
+  }
+
+  /**
+   * Get current grid dimensions
+   */
+  public getGridDimensions(): GridDimensions {
+    return {
+      cols: this._currentGridCols,
+      rows: this._currentGridRows,
+    };
+  }
+
+  /**
+   * Get current world dimensions in pixels
+   */
+  public getWorldDimensions(): WorldDimensions {
+    return {
+      width: this._currentGridCols * TILE_SIZE,
+      height: this._currentGridRows * TILE_SIZE,
+    };
+  }
+
+  /**
+   * Get spawn area information
+   */
+  public getSpawnArea(): SpawnArea {
+    return {
+      centerX: this._spawnCenterX,
+      centerY: this._spawnCenterY,
+      radius: PLAYER_SPAWN_RADIUS,
+    };
   }
 }
