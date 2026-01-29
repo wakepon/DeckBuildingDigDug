@@ -205,10 +205,8 @@ export class BulletManager {
         // Get wall color before damaging
         const wallColor = this.wallManager.getWallColor(gridX, gridY);
 
-        // Damage wall using attack power with multi-way shot penalty (minimum 1 damage)
-        const wallDamage = Math.max(1, Math.floor(
-          this.playerStats.attackPower * this.playerStats.multiWayShotDamageMultiplier
-        ));
+        // Damage wall using attack power with multi-way shot multiplier
+        const wallDamage = this.playerStats.attackPower * this.playerStats.multiWayShotDamageMultiplier;
         const destroyed = this.wallManager.damageWall(gridX, gridY, wallDamage);
 
         if (destroyed && wallColor !== null) {

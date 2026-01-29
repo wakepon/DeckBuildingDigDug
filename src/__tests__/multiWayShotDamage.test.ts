@@ -315,36 +315,27 @@ describe('Multi-Way Shot Damage System', () => {
       expect(enemyDamage).toBeCloseTo(0.8, 5);
     });
 
-    it('should ensure minimum wall damage of 1', () => {
-      // Level 3 with base attack power: 1.0 * 0.4 = 0.4
+    it('should apply damage multiplier to wall damage without floor or minimum', () => {
       stats.applyUpgrade('multiWayShot');
       stats.applyUpgrade('multiWayShot');
 
-      const rawDamage = stats.attackPower * stats.multiWayShotDamageMultiplier;
-      expect(rawDamage).toBe(0.4);
-
-      // Wall damage should be min 1
-      const wallDamage = Math.max(1, Math.floor(rawDamage));
-      expect(wallDamage).toBe(1);
+      const wallDamage = stats.attackPower * stats.multiWayShotDamageMultiplier;
+      expect(wallDamage).toBe(0.4);
     });
 
-    it('should calculate correct wall damage with upgraded attack power', () => {
+    it('should calculate wall damage with upgraded attack power', () => {
       // Upgrade attack power 10 times: 1.0 + 10*0.2 = 3.0
       for (let i = 0; i < 10; i++) {
         stats.applyUpgrade('attackPower');
       }
-      expect(stats.attackPower).toBeCloseTo(3.0, 5);
 
       // Upgrade multi-way shot to level 3 (0.4 multiplier)
       stats.applyUpgrade('multiWayShot');
       stats.applyUpgrade('multiWayShot');
 
-      // Wall damage: floor(3.0 * 0.4) = floor(1.2) = 1
-      const rawDamage = stats.attackPower * stats.multiWayShotDamageMultiplier;
-      expect(rawDamage).toBeCloseTo(1.2, 5);
-
-      const wallDamage = Math.max(1, Math.floor(rawDamage));
-      expect(wallDamage).toBe(1);
+      // Wall damage: 3.0 * 0.4 = 1.2
+      const wallDamage = stats.attackPower * stats.multiWayShotDamageMultiplier;
+      expect(wallDamage).toBeCloseTo(1.2, 5);
     });
   });
 });
