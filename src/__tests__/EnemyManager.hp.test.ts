@@ -69,7 +69,7 @@ describe('EnemyManager HP initialization', () => {
 
   describe('setEnemyHP', () => {
     it('should allow overriding enemy HP for floor scaling', () => {
-      // Set scaled HP (e.g., floor 2: 1 * 1.2 = 2 after ceil)
+      // Set scaled HP (e.g., floor 6: 1 * 2.0 = 2 after floor)
       enemyManager.setEnemyHP(2);
       enemyManager.spawnEnemy(100, 100);
 
@@ -78,7 +78,7 @@ describe('EnemyManager HP initialization', () => {
     });
 
     it('should allow setting HP to simulate later floors', () => {
-      // Floor 6: ceil(1 * (1 + 0.2 * 5)) = ceil(2.0) = 2
+      // Floor 6: floor(1 * (1 + 0.2 * 5)) = floor(2.0) = 2
       enemyManager.setEnemyHP(2);
       enemyManager.spawnEnemy(200, 200);
 

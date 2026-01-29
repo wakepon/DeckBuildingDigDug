@@ -71,9 +71,10 @@ export class FloorManager {
   }
 
   // Scaled enemy HP for current floor
+  // Uses Math.floor to reduce enemy strength scaling rate
   getEnemyHP(): number {
     const scale = 1 + (this._currentFloor - 1) * FLOOR_ENEMY_HP_SCALE;
-    return Math.ceil(ENEMY_HP * scale);
+    return Math.floor(ENEMY_HP * scale);
   }
 
   // Scaled enemy spawn chance for current floor
