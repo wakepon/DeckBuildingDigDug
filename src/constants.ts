@@ -11,8 +11,13 @@ export const GRID_ROWS = 30;
 export const WORLD_WIDTH = GRID_COLS * TILE_SIZE;
 export const WORLD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
+// Outer wall settings (indestructible boundary walls)
+export const OUTER_WALL_HP = -1; // Special value for indestructible walls
+export const OUTER_WALL_COLOR = 0x0A0A14; // Very dark (almost black) - permanent boundary
+
 // Wall HP colors (higher HP = darker/stronger color)
 export const WALL_COLORS: Record<number, number> = {
+  [OUTER_WALL_HP]: OUTER_WALL_COLOR, // Outer wall (indestructible)
   1: 0x8B4513,  // Light brown - weak wall
   2: 0x654321,  // Medium brown - medium wall
   3: 0x3D2914,  // Dark brown - strong wall

@@ -7,6 +7,8 @@ import {
   WALL_HP_SCALING,
   PLAYER_SPAWN_RADIUS,
   STAIRS_MIN_DISTANCE,
+  OUTER_WALL_HP,
+  OUTER_WALL_COLOR,
 } from './constants';
 import { FloorManager } from './FloorManager';
 
@@ -85,6 +87,13 @@ export class WallManager {
     for (let y = 0; y < this._currentGridRows; y++) {
       this.walls[y] = [];
       for (let x = 0; x < this._currentGridCols; x++) {
+        // Check if this is an outer wall position (indestructible boundary)
+        if (this.isOuterWall(x, y)) {
+          const wall = this.createWall(x, y, OUTER_WALL_HP);
+          this.walls[y][x] = wall;
+          continue;
+        }
+
         // Check if this position is in the player spawn area
         if (this.isPlayerSpawnArea(x, y)) {
           this.walls[y][x] = null;
@@ -104,6 +113,9 @@ export class WallManager {
 
     for (let y = 0; y < this._currentGridRows; y++) {
       for (let x = 0; x < this._currentGridCols; x++) {
+        // Must not be on outer wall (boundary)
+        if (this.isOuterWall(x, y)) continue;
+
         // Must not be in spawn area
         if (this.isPlayerSpawnArea(x, y)) continue;
 
@@ -123,7 +135,7 @@ export class WallManager {
       return validPositions[Math.floor(Math.random() * validPositions.length)];
     }
 
-    // Fallback: far corner of current floor
+    // Fallback: position inside outer walls
     return { x: this._currentGridCols - 2, y: this._currentGridRows - 2 };
   }
 
@@ -133,11 +145,27 @@ export class WallManager {
     return dx <= PLAYER_SPAWN_RADIUS && dy <= PLAYER_SPAWN_RADIUS;
   }
 
+  /**
+   * Check if a grid position is on the outer wall (dungeon perimeter)
+   */
+  public isOuterWall(x: number, y: number): boolean {
+    return (
+      x === 0 ||
+      x === this._currentGridCols - 1 ||
+      y === 0 ||
+      y === this._currentGridRows - 1
+    );
+  }
+
   private clampHP(hp: number): number {
     return Math.max(WALL_HP_SCALING.MIN_HP, Math.min(WALL_HP_SCALING.MAX_HP, Math.floor(hp)));
   }
 
   private getWallColorForHP(hp: number): number {
+    // Handle outer wall special case
+    if (hp === OUTER_WALL_HP) {
+      return OUTER_WALL_COLOR;
+    }
     const clampedHP = this.clampHP(hp);
     return WALL_COLORS[clampedHP] ?? WALL_COLORS[WALL_HP_SCALING.MIN_HP];
   }
@@ -191,6 +219,11 @@ export class WallManager {
   public damageWall(x: number, y: number, damage: number): boolean {
     const wall = this.getWall(x, y);
     if (!wall) return false;
+
+    // Outer walls are indestructible
+    if (wall.hp === OUTER_WALL_HP) {
+      return false;
+    }
 
     const newHp = wall.hp - damage;
 

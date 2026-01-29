@@ -90,18 +90,25 @@ describe('WallManager - Auto-aim support', () => {
       const initialCenters = wallManager.getWallCenters();
       const initialCount = initialCenters.length;
 
-      // Find a valid wall position and destroy it
-      if (initialCenters.length > 0) {
-        const firstCenter = initialCenters[0];
-        const gridX = Math.floor(firstCenter.x / TILE_SIZE);
-        const gridY = Math.floor(firstCenter.y / TILE_SIZE);
+      // Find a valid interior wall position and destroy it (skip outer walls which are indestructible)
+      let destroyed = false;
+      for (const center of initialCenters) {
+        const gridX = Math.floor(center.x / TILE_SIZE);
+        const gridY = Math.floor(center.y / TILE_SIZE);
+
+        // Skip outer walls (they are indestructible)
+        if (wallManager.isOuterWall(gridX, gridY)) continue;
 
         // Damage the wall until destroyed
         const wall = wallManager.getWall(gridX, gridY);
         if (wall) {
           wallManager.damageWall(gridX, gridY, wall.hp);
+          destroyed = true;
+          break;
         }
+      }
 
+      if (destroyed) {
         const newCenters = wallManager.getWallCenters();
         expect(newCenters.length).toBe(initialCount - 1);
       }

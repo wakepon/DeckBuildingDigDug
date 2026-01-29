@@ -35,9 +35,9 @@ describe('FloorManager Dynamic Floor Size', () => {
       it('should return dimensions large enough for gameplay', () => {
         const dimensions = floorManager.getFloorGridDimensions();
 
-        // Minimum playable area: at least 15x12 (600x480 pixels with 40px tiles)
+        // Minimum playable area: at least 15x11 (matches FLOOR_SIZE_SCALING.BASE_COLS/BASE_ROWS)
         expect(dimensions.cols).toBeGreaterThanOrEqual(15);
-        expect(dimensions.rows).toBeGreaterThanOrEqual(12);
+        expect(dimensions.rows).toBeGreaterThanOrEqual(11);
       });
     });
 
