@@ -35,6 +35,8 @@ export class EnemyManager {
   private cameraX: number = 0;
   private cameraY: number = 0;
   private eliteSpawnedThisFloor: number = 0;
+  private worldWidth: number = WORLD_WIDTH;
+  private worldHeight: number = WORLD_HEIGHT;
 
   constructor(eventBus: EventBus) {
     this.container = new Container();
@@ -45,6 +47,14 @@ export class EnemyManager {
     this.enemyHP = hp;
   }
 
+  /**
+   * Set the world dimensions for spawn position clamping
+   * Used when floor size changes
+   */
+  setWorldSize(width: number, height: number): void {
+    this.worldWidth = width;
+    this.worldHeight = height;
+  }
 
   onWallDestroyed(x: number, y: number): void {
     // Only elite enemies spawn from walls now (with floor limit)
@@ -99,8 +109,8 @@ export class EnemyManager {
         break;
     }
 
-    x = Math.max(EDGE_SPAWN_OFFSET, Math.min(WORLD_WIDTH - EDGE_SPAWN_OFFSET, x));
-    y = Math.max(EDGE_SPAWN_OFFSET, Math.min(WORLD_HEIGHT - EDGE_SPAWN_OFFSET, y));
+    x = Math.max(EDGE_SPAWN_OFFSET, Math.min(this.worldWidth - EDGE_SPAWN_OFFSET, x));
+    y = Math.max(EDGE_SPAWN_OFFSET, Math.min(this.worldHeight - EDGE_SPAWN_OFFSET, y));
 
     return { x, y };
   }

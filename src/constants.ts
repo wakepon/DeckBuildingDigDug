@@ -4,8 +4,8 @@ export const SCREEN_HEIGHT = 600;
 
 // Grid settings
 export const TILE_SIZE = 40;
-export const GRID_COLS = 20;
-export const GRID_ROWS = 15;
+export const GRID_COLS = 40;
+export const GRID_ROWS = 30;
 
 // World dimensions (in pixels)
 export const WORLD_WIDTH = GRID_COLS * TILE_SIZE;
@@ -125,6 +125,16 @@ export const OXYGEN_TANK_INITIAL_COUNT = 4; // Tanks in safe zone at floor start
 export const FLOOR_ENEMY_HP_SCALE = 0.2; // +20% HP per floor
 export const FLOOR_ENEMY_SPAWN_SCALE = 0.02; // +2% spawn chance per floor
 export const FLOOR_GEM_EXP_SCALE = 0.3; // +30% exp per floor
+
+// Floor size scaling constants
+// Floors start smaller and grow larger as player progresses
+export const FLOOR_SIZE_SCALING = {
+  BASE_COLS: 20,             // Starting grid columns on floor 1
+  BASE_ROWS: 15,             // Starting grid rows on floor 1
+  COLS_PER_FLOOR: 2.5,       // Additional columns per floor (reaches 40 by floor ~9)
+  ROWS_PER_FLOOR: 1.875,     // Additional rows per floor (reaches 30 by floor ~9)
+  MAX_FLOOR_FOR_SCALING: 10, // Floor at which max size is reached
+};
 
 // Level-up settings
 export const EXP_PER_LEVEL_BASE = 10; // Required EXP = 10 × level

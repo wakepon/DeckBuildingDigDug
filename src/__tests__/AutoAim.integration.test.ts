@@ -252,13 +252,15 @@ describe('Auto-aim Integration', () => {
       (inputManager as unknown as { _mouseX: number })._mouseX = 200;
       (inputManager as unknown as { _mouseY: number })._mouseY = 100;
 
-      // Player at (100, 100), camera offset (-100, 0) means camera moved right
-      // Mouse world position = (200 + (-100), 100 + 0) = (100, 100) - same as player!
+      // Player at (100, 100), camera offset (-100, 0) means player moved right from start
+      // Correct formula: worldX = screenX - cameraX
+      // Mouse world position = (200 - (-100), 100 - 0) = (300, 100)
+      // Direction from player (100, 100) to mouse (300, 100) = (200, 0), normalized (1, 0)
       const mouseDir = inputManager.getMouseDirection(100, 100, -100, 0);
 
-      // Mouse is at player position, should return zero
-      expect(mouseDir.x).toBe(0);
-      expect(mouseDir.y).toBe(0);
+      // Mouse is to the right of player
+      expect(mouseDir.x).toBeCloseTo(1);
+      expect(mouseDir.y).toBeCloseTo(0);
     });
 
     it('should work with camera offset and target detection', () => {
@@ -266,10 +268,10 @@ describe('Auto-aim Integration', () => {
       (inputManager as unknown as { _mouseX: number })._mouseX = 400;
       (inputManager as unknown as { _mouseY: number })._mouseY = 100;
 
-      // Player at world (200, 100), camera at world (100, 0)
-      // Camera offset in our convention means: worldX = screenX + cameraX
-      // So mouse world = (400 + 100, 100 + 0) = (500, 100)
-      // Direction from player (200, 100) to mouse (500, 100) = (300, 0), normalized (1, 0)
+      // Player at world (200, 100), camera offset (100, 0)
+      // Correct formula: worldX = screenX - cameraX
+      // So mouse world = (400 - 100, 100 - 0) = (300, 100)
+      // Direction from player (200, 100) to mouse (300, 100) = (100, 0), normalized (1, 0)
       const mouseDir = inputManager.getMouseDirection(200, 100, 100, 0);
 
       expect(mouseDir.x).toBeCloseTo(1);

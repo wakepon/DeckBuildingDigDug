@@ -5,11 +5,16 @@ import { PlayerStats } from './PlayerStats';
 import {
   PLAYER_SIZE,
   PLAYER_COLOR,
-  PLAYER_SPAWN_CENTER_X,
-  PLAYER_SPAWN_CENTER_Y,
   TILE_SIZE,
   PLAYER_INVINCIBILITY_TIME,
+  FLOOR_SIZE_SCALING,
 } from './constants';
+
+// Interface for spawn center position (grid coordinates)
+interface SpawnCenter {
+  x: number;
+  y: number;
+}
 
 export class Player {
   public container: Container;
@@ -23,14 +28,23 @@ export class Player {
   private _hp: number;
   private _invincibilityTime: number = 0;
 
-  constructor(inputManager: InputManager, wallManager: WallManager, stats: PlayerStats) {
+  constructor(
+    inputManager: InputManager,
+    wallManager: WallManager,
+    stats: PlayerStats,
+    spawnCenter?: SpawnCenter
+  ) {
     this.inputManager = inputManager;
     this.wallManager = wallManager;
     this.stats = stats;
 
-    // Start at center of spawn area
-    this._x = (PLAYER_SPAWN_CENTER_X + 0.5) * TILE_SIZE;
-    this._y = (PLAYER_SPAWN_CENTER_Y + 0.5) * TILE_SIZE;
+    // Use provided spawn center or default to floor 1 center
+    const centerX = spawnCenter?.x ?? Math.floor(FLOOR_SIZE_SCALING.BASE_COLS / 2);
+    const centerY = spawnCenter?.y ?? Math.floor(FLOOR_SIZE_SCALING.BASE_ROWS / 2);
+
+    // Start at center of spawn area (centered in tile)
+    this._x = (centerX + 0.5) * TILE_SIZE;
+    this._y = (centerY + 0.5) * TILE_SIZE;
     this._hp = this.stats.maxHp;
 
     this.container = new Container();

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TILE_SIZE } from '../constants';
+import { TILE_SIZE, PLAYER_SPAWN_CENTER_X, PLAYER_SPAWN_CENTER_Y } from '../constants';
 
 // Mock pixi.js
 vi.mock('pixi.js', () => ({
@@ -71,10 +71,10 @@ describe('WallManager - Auto-aim support', () => {
     it('should not include spawn area positions', () => {
       const centers = wallManager.getWallCenters();
 
-      // Spawn area is around grid (10, 7) with radius 1 (3x3)
-      // So spawn area grid positions are: 9,10,11 x 6,7,8
-      const spawnAreaCenterX = 10 * TILE_SIZE + TILE_SIZE / 2;
-      const spawnAreaCenterY = 7 * TILE_SIZE + TILE_SIZE / 2;
+      // Spawn area is around grid center with radius 1 (3x3)
+      // Use constants for spawn center position
+      const spawnAreaCenterX = PLAYER_SPAWN_CENTER_X * TILE_SIZE + TILE_SIZE / 2;
+      const spawnAreaCenterY = PLAYER_SPAWN_CENTER_Y * TILE_SIZE + TILE_SIZE / 2;
 
       // None of the returned centers should be in the spawn area
       for (const center of centers) {

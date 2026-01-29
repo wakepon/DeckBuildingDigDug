@@ -1,6 +1,7 @@
 import { Application, Container } from 'pixi.js';
 import { EventBus } from './EventBus';
-import { SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT, TILE_SIZE, PLAYER_SPAWN_CENTER_X, PLAYER_SPAWN_CENTER_Y, ELITE_COLOR } from './constants';
+import { SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE, ELITE_COLOR } from './constants';
+import { Camera } from './Camera';
 import { WallManager } from './WallManager';
 import { InputManager } from './InputManager';
 import { Player } from './Player';
@@ -46,6 +47,7 @@ export class Game {
   private debugWindow!: DebugWindow;
   private autoAimSystem!: AutoAimSystem;
   private crosshair!: Crosshair;
+  private camera!: Camera;
   private isTransitioning: boolean = false;
   private isPaused: boolean = false;
 
@@ -88,8 +90,16 @@ export class Game {
     const stairsPos = this.wallManager.stairsPosition;
     this.stairs = new Stairs(stairsPos.x, stairsPos.y);
 
-    // Initialize player with stats
-    this.player = new Player(this.inputManager, this.wallManager, this.playerStats);
+    // Get dynamic spawn center from floor manager
+    const spawnCenter = this.floorManager.getFloorSpawnCenter();
+
+    // Initialize player with stats and spawn center
+    this.player = new Player(
+      this.inputManager,
+      this.wallManager,
+      this.playerStats,
+      { x: spawnCenter.x, y: spawnCenter.y }
+    );
 
     // Initialize bullet manager with stats
     this.bulletManager = new BulletManager(
@@ -111,8 +121,11 @@ export class Game {
     this.gemManager = new GemManager(this.playerStats, this.eventBus);
     this.gemManager.setExpValue(this.floorManager.getGemExpValue());
 
-    // Initialize oxygen tank manager with EventBus
-    this.oxygenTankManager = new OxygenTankManager(this.eventBus);
+    // Initialize oxygen tank manager with EventBus and spawn center
+    this.oxygenTankManager = new OxygenTankManager(
+      this.eventBus,
+      { x: spawnCenter.x, y: spawnCenter.y }
+    );
 
     // Initialize oxygen controller with stats
     this.oxygenController = new OxygenController(this.playerStats);
@@ -147,9 +160,17 @@ export class Game {
     // Initialize Crosshair
     this.crosshair = new Crosshair(this.inputManager);
 
+    // Initialize Camera with dynamic world size from floor manager
+    const worldDims = this.floorManager.getFloorWorldDimensions();
+    this.camera = new Camera(SCREEN_WIDTH, SCREEN_HEIGHT, worldDims.width, worldDims.height);
+
     // Connect managers
     this.bulletManager.setEnemyManager(this.enemyManager);
     this.bulletManager.setAutoAimSystem(this.autoAimSystem);
+
+    // Set initial world size for managers that need it
+    this.bulletManager.setWorldSize(worldDims.width, worldDims.height);
+    this.enemyManager.setWorldSize(worldDims.width, worldDims.height);
 
     // Setup EventBus listeners
     this.setupEventListeners();
@@ -377,10 +398,13 @@ export class Game {
     // Add stairs after walls but before other objects
     this.gameContainer.addChildAt(this.stairs.graphics, 1);
 
-    // Reset player position to spawn area
+    // Get dynamic spawn center from floor manager
+    const spawnCenter = this.floorManager.getFloorSpawnCenter();
+
+    // Reset player position to spawn area (centered in tile)
     this.player.resetPosition(
-      (PLAYER_SPAWN_CENTER_X + 0.5) * TILE_SIZE,
-      (PLAYER_SPAWN_CENTER_Y + 0.5) * TILE_SIZE
+      (spawnCenter.x + 0.5) * TILE_SIZE,
+      (spawnCenter.y + 0.5) * TILE_SIZE
     );
 
     // Clear enemies and reset edge spawn state
@@ -390,8 +414,12 @@ export class Game {
     // Clear gems
     this.gemManager.clear();
 
-    // Clear oxygen tanks and spawn initial tanks
+    // Update oxygen tank manager spawn center and spawn initial tanks
     this.oxygenTankManager.clear();
+    this.oxygenTankManager.setSpawnCenter({
+      x: spawnCenter.x,
+      y: spawnCenter.y,
+    });
     this.oxygenTankManager.spawnInitialTanks();
 
     // Clear bullets
@@ -409,6 +437,12 @@ export class Game {
     // Update gem manager with new floor EXP value
     this.gemManager.setExpValue(this.floorManager.getGemExpValue());
 
+    // Update world size for all managers that need it
+    const worldDims = this.floorManager.getFloorWorldDimensions();
+    this.camera.updateWorldSize(worldDims.width, worldDims.height);
+    this.bulletManager.setWorldSize(worldDims.width, worldDims.height);
+    this.enemyManager.setWorldSize(worldDims.width, worldDims.height);
+
     // Reset camera to spawn position
     this.gameContainer.x = 0;
     this.gameContainer.y = 0;
@@ -416,18 +450,10 @@ export class Game {
   }
 
   private updateCamera(): void {
-    // Center camera on player
-    const targetX = SCREEN_WIDTH / 2 - this.player.x;
-    const targetY = SCREEN_HEIGHT / 2 - this.player.y;
-
-    // Clamp camera to world bounds
-    const minX = SCREEN_WIDTH - WORLD_WIDTH;
-    const maxX = 0;
-    const minY = SCREEN_HEIGHT - WORLD_HEIGHT;
-    const maxY = 0;
-
-    this.gameContainer.x = Math.max(minX, Math.min(maxX, targetX));
-    this.gameContainer.y = Math.max(minY, Math.min(maxY, targetY));
+    // Use Camera class to follow player and clamp to world bounds
+    this.camera.follow(this.player.x, this.player.y);
+    this.gameContainer.x = this.camera.x;
+    this.gameContainer.y = this.camera.y;
   }
 
   get stage() {
