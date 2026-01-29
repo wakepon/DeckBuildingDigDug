@@ -206,6 +206,34 @@ export class Bullet {
   }
 
   /**
+   * Ensure damage text is created and positioned correctly
+   * Called when forcing text creation (e.g., when toggling display on)
+   */
+  ensureDamageTextCreated(): void {
+    if (!this.damageText) {
+      this.damageText = new Text({
+        text: String(this._damage),
+        style: {
+          fontFamily: DEBUG_DISPLAY_TEXT_STYLE.fontFamily,
+          fontSize: DEBUG_DISPLAY_TEXT_STYLE.fontSize,
+          fontWeight: DEBUG_DISPLAY_TEXT_STYLE.fontWeight,
+          fill: DEBUG_DISPLAY_HP_COLORS.bulletDamage,
+          stroke: {
+            color: DEBUG_DISPLAY_TEXT_STYLE.stroke,
+            width: DEBUG_DISPLAY_TEXT_STYLE.strokeThickness,
+          },
+        },
+      });
+      this.damageText.anchor.set(0.5, 0.5);
+    }
+    // Update text and position
+    this.damageText.text = String(this._damage);
+    this.damageText.x = this.x;
+    this.damageText.y = this.y - this.size - DEBUG_DISPLAY_TEXT_OFFSET.bulletDamage;
+    this.damageText.visible = true;
+  }
+
+  /**
    * Update damage display text based on debug display state
    */
   private updateDamageDisplay(): void {

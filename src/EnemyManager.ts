@@ -99,12 +99,14 @@ export class EnemyManager {
     const shouldShow = this.debugDisplayManager?.getState().showEnemyHP ?? false;
     if (shouldShow) {
       for (const enemy of this.enemies) {
+        enemy.ensureHPTextCreated(); // Force create text if it doesn't exist
         const hpText = enemy.getHPTextElement();
         if (hpText) {
           this.hpTextContainer.addChild(hpText);
         }
       }
       for (const elite of this.eliteEnemies) {
+        elite.ensureHPTextCreated(); // Force create text if it doesn't exist
         const hpText = elite.getHPTextElement();
         if (hpText) {
           this.hpTextContainer.addChild(hpText);
@@ -194,10 +196,13 @@ export class EnemyManager {
     const enemy = new Enemy(x, y, this.enemyHP);
     if (this.debugDisplayManager) {
       enemy.setDebugDisplayManager(this.debugDisplayManager);
-      // Add HP text to container if it exists
-      const hpText = enemy.getHPTextElement();
-      if (hpText && this.debugDisplayManager.getState().showEnemyHP) {
-        this.hpTextContainer.addChild(hpText);
+      // Add HP text to container if display is enabled
+      if (this.debugDisplayManager.getState().showEnemyHP) {
+        enemy.ensureHPTextCreated(); // Force create text
+        const hpText = enemy.getHPTextElement();
+        if (hpText) {
+          this.hpTextContainer.addChild(hpText);
+        }
       }
     }
     this.enemies.push(enemy);
@@ -208,10 +213,13 @@ export class EnemyManager {
     const elite = new EliteEnemy(x, y, this.enemyHP);
     if (this.debugDisplayManager) {
       elite.setDebugDisplayManager(this.debugDisplayManager);
-      // Add HP text to container if it exists
-      const hpText = elite.getHPTextElement();
-      if (hpText && this.debugDisplayManager.getState().showEnemyHP) {
-        this.hpTextContainer.addChild(hpText);
+      // Add HP text to container if display is enabled
+      if (this.debugDisplayManager.getState().showEnemyHP) {
+        elite.ensureHPTextCreated(); // Force create text
+        const hpText = elite.getHPTextElement();
+        if (hpText) {
+          this.hpTextContainer.addChild(hpText);
+        }
       }
     }
     this.eliteEnemies.push(elite);

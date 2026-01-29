@@ -103,6 +103,7 @@ export class BulletManager {
     const shouldShow = this.debugDisplayManager?.getState().showBulletDamage ?? false;
     if (shouldShow) {
       for (const bullet of this.bullets) {
+        bullet.ensureDamageTextCreated(); // Force create text if it doesn't exist
         const damageText = bullet.getDamageTextElement();
         if (damageText) {
           this.damageTextContainer.addChild(damageText);
@@ -428,10 +429,13 @@ export class BulletManager {
       );
       if (this.debugDisplayManager) {
         bullet.setDebugDisplayManager(this.debugDisplayManager);
-        // Add damage text to container if it exists
-        const damageText = bullet.getDamageTextElement();
-        if (damageText && this.debugDisplayManager.getState().showBulletDamage) {
-          this.damageTextContainer.addChild(damageText);
+        // Add damage text to container if display is enabled
+        if (this.debugDisplayManager.getState().showBulletDamage) {
+          bullet.ensureDamageTextCreated(); // Force create text
+          const damageText = bullet.getDamageTextElement();
+          if (damageText) {
+            this.damageTextContainer.addChild(damageText);
+          }
         }
       }
       this.bullets.push(bullet);

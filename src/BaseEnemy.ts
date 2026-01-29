@@ -122,6 +122,34 @@ export abstract class BaseEnemy {
   }
 
   /**
+   * Ensure HP text is created and positioned correctly
+   * Called when forcing text creation (e.g., when toggling display on)
+   */
+  ensureHPTextCreated(): void {
+    if (!this.hpText) {
+      this.hpText = new Text({
+        text: String(this.hp),
+        style: {
+          fontFamily: DEBUG_DISPLAY_TEXT_STYLE.fontFamily,
+          fontSize: DEBUG_DISPLAY_TEXT_STYLE.fontSize,
+          fontWeight: DEBUG_DISPLAY_TEXT_STYLE.fontWeight,
+          fill: DEBUG_DISPLAY_HP_COLORS.enemyHP,
+          stroke: {
+            color: DEBUG_DISPLAY_TEXT_STYLE.stroke,
+            width: DEBUG_DISPLAY_TEXT_STYLE.strokeThickness,
+          },
+        },
+      });
+      this.hpText.anchor.set(0.5, 0.5);
+    }
+    // Update text and position
+    this.hpText.text = String(this.hp);
+    this.hpText.x = this.x;
+    this.hpText.y = this.y - this.radius - DEBUG_DISPLAY_TEXT_OFFSET.enemyHP;
+    this.hpText.visible = true;
+  }
+
+  /**
    * Update HP display text based on debug display state
    */
   private updateHPDisplay(): void {
