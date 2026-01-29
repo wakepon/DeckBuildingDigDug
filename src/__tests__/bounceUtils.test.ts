@@ -3,6 +3,7 @@ import {
   calculateReflectionVector,
   determineWallNormal,
   applyBounce,
+  calculateEnemyReflectionNormal,
   type Vector2D,
 } from '../bounceUtils';
 
@@ -231,6 +232,124 @@ describe('bounceUtils', () => {
       // Horizontal component should be reversed, vertical unchanged
       expect(result.newVelocity.x).toBeCloseTo(-100);
       expect(result.newVelocity.y).toBeCloseTo(50);
+    });
+  });
+
+  describe('calculateEnemyReflectionNormal', () => {
+    it('should calculate normal pointing away from enemy center when bullet is to the right', () => {
+      // Bullet is at (150, 100), enemy center at (100, 100)
+      const bulletX = 150;
+      const bulletY = 100;
+      const enemyX = 100;
+      const enemyY = 100;
+
+      const normal = calculateEnemyReflectionNormal(bulletX, bulletY, enemyX, enemyY);
+
+      // Normal should point right (away from enemy)
+      expect(normal.x).toBeCloseTo(1);
+      expect(normal.y).toBeCloseTo(0);
+    });
+
+    it('should calculate normal pointing away from enemy center when bullet is to the left', () => {
+      // Bullet is at (50, 100), enemy center at (100, 100)
+      const bulletX = 50;
+      const bulletY = 100;
+      const enemyX = 100;
+      const enemyY = 100;
+
+      const normal = calculateEnemyReflectionNormal(bulletX, bulletY, enemyX, enemyY);
+
+      // Normal should point left (away from enemy)
+      expect(normal.x).toBeCloseTo(-1);
+      expect(normal.y).toBeCloseTo(0);
+    });
+
+    it('should calculate normal pointing away from enemy center when bullet is above', () => {
+      // Bullet is at (100, 50), enemy center at (100, 100)
+      const bulletX = 100;
+      const bulletY = 50;
+      const enemyX = 100;
+      const enemyY = 100;
+
+      const normal = calculateEnemyReflectionNormal(bulletX, bulletY, enemyX, enemyY);
+
+      // Normal should point up (away from enemy)
+      expect(normal.x).toBeCloseTo(0);
+      expect(normal.y).toBeCloseTo(-1);
+    });
+
+    it('should calculate normal pointing away from enemy center when bullet is below', () => {
+      // Bullet is at (100, 150), enemy center at (100, 100)
+      const bulletX = 100;
+      const bulletY = 150;
+      const enemyX = 100;
+      const enemyY = 100;
+
+      const normal = calculateEnemyReflectionNormal(bulletX, bulletY, enemyX, enemyY);
+
+      // Normal should point down (away from enemy)
+      expect(normal.x).toBeCloseTo(0);
+      expect(normal.y).toBeCloseTo(1);
+    });
+
+    it('should calculate diagonal normal when bullet is at 45 degrees from enemy', () => {
+      // Bullet is at (150, 50), enemy center at (100, 100)
+      const bulletX = 150;
+      const bulletY = 50;
+      const enemyX = 100;
+      const enemyY = 100;
+
+      const normal = calculateEnemyReflectionNormal(bulletX, bulletY, enemyX, enemyY);
+
+      // Normal should point toward upper-right
+      const expectedX = Math.SQRT1_2;
+      const expectedY = -Math.SQRT1_2;
+      expect(normal.x).toBeCloseTo(expectedX);
+      expect(normal.y).toBeCloseTo(expectedY);
+    });
+
+    it('should return unit vector (magnitude 1)', () => {
+      // Arbitrary positions
+      const bulletX = 137;
+      const bulletY = 89;
+      const enemyX = 100;
+      const enemyY = 100;
+
+      const normal = calculateEnemyReflectionNormal(bulletX, bulletY, enemyX, enemyY);
+
+      const magnitude = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
+      expect(magnitude).toBeCloseTo(1);
+    });
+
+    it('should handle bullet at same position as enemy (fallback to upward normal)', () => {
+      // Edge case: bullet exactly at enemy center
+      const bulletX = 100;
+      const bulletY = 100;
+      const enemyX = 100;
+      const enemyY = 100;
+
+      const normal = calculateEnemyReflectionNormal(bulletX, bulletY, enemyX, enemyY);
+
+      // Should return a fallback unit vector pointing up
+      expect(normal.x).toBeCloseTo(0);
+      expect(normal.y).toBeCloseTo(-1);
+      const magnitude = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
+      expect(magnitude).toBeCloseTo(1);
+    });
+
+    it('should handle very small distances between bullet and enemy', () => {
+      // Bullet very close to enemy center
+      const bulletX = 100.001;
+      const bulletY = 100;
+      const enemyX = 100;
+      const enemyY = 100;
+
+      const normal = calculateEnemyReflectionNormal(bulletX, bulletY, enemyX, enemyY);
+
+      // Should still return a valid unit vector pointing right
+      expect(normal.x).toBeGreaterThan(0);
+      const magnitude = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
+      expect(magnitude).toBeCloseTo(1);
     });
   });
 });

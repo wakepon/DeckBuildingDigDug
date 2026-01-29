@@ -68,6 +68,38 @@ export function determineWallNormal(velocity: Vector2D): Vector2D {
 }
 
 /**
+ * Calculate the reflection normal for bouncing off an enemy.
+ * The normal points from the enemy center outward toward the bullet position.
+ * @param bulletX - The bullet's X position
+ * @param bulletY - The bullet's Y position
+ * @param enemyX - The enemy's center X position
+ * @param enemyY - The enemy's center Y position
+ * @returns A unit vector pointing away from the enemy center
+ */
+export function calculateEnemyReflectionNormal(
+  bulletX: number,
+  bulletY: number,
+  enemyX: number,
+  enemyY: number
+): Vector2D {
+  const dx = bulletX - enemyX;
+  const dy = bulletY - enemyY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // Handle edge case where bullet is at exact enemy center
+  if (distance < 0.0001) {
+    // Return upward normal as fallback
+    return { x: 0, y: -1 };
+  }
+
+  // Normalize to get unit vector
+  return {
+    x: dx / distance,
+    y: dy / distance,
+  };
+}
+
+/**
  * Apply bounce logic to a bullet hitting a wall.
  * @param bulletX - Current bullet X position
  * @param bulletY - Current bullet Y position

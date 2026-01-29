@@ -242,8 +242,12 @@ export class EnemyManager {
 
   /**
    * Damage an enemy at the given position.
-   * @param excludeIds - Set of enemy IDs to exclude from collision check
-   * @returns The enemy ID if hit, null if no enemy was hit
+   * @param x - X coordinate of the collision point
+   * @param y - Y coordinate of the collision point
+   * @param radius - Collision radius to check
+   * @param damage - Amount of damage to apply
+   * @param excludeIds - Set of enemy IDs to exclude from collision check (optional)
+   * @returns Object with enemy id, center position, and radius if hit, null if no enemy was hit
    */
   damageEnemyAt(
     x: number,
@@ -251,7 +255,7 @@ export class EnemyManager {
     radius: number,
     damage: number,
     excludeIds?: Set<string>
-  ): string | null {
+  ): { id: string; x: number; y: number; radius: number } | null {
     // Check normal enemies
     for (const enemy of this.enemies) {
       if (!enemy.active) continue;
@@ -261,7 +265,7 @@ export class EnemyManager {
 
       if (dist < radius + enemy.radius) {
         enemy.takeDamage(damage);
-        return enemy.id;
+        return { id: enemy.id, x: enemy.x, y: enemy.y, radius: enemy.radius };
       }
     }
 
@@ -274,7 +278,7 @@ export class EnemyManager {
 
       if (dist < radius + elite.radius) {
         elite.takeDamage(damage);
-        return elite.id;
+        return { id: elite.id, x: elite.x, y: elite.y, radius: elite.radius };
       }
     }
 

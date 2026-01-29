@@ -235,6 +235,7 @@ export const MULTI_WAY_SHOT_ANGLE_SPREAD = (20 * Math.PI) / 180; // 20 degrees i
 
 // Bounce settings
 export const BOUNCE_OFFSET = 2; // pixels to offset bullet from wall after bounce
+export const ENEMY_BOUNCE_MARGIN = 2; // Extra margin to prevent re-collision with enemy after bounce
 
 // Multi-way shot damage multipliers by level
 export const MULTI_WAY_SHOT_DAMAGE_MULTIPLIERS: Record<number, number> = {

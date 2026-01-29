@@ -8,12 +8,13 @@ import { PlayerStats } from './PlayerStats';
 import { EventBus } from './EventBus';
 import { AutoAimSystem, Target, TargetType } from './AutoAimSystem';
 import { calculateMultiWayShotDirections } from './multiWayShotUtils';
-import { determineWallNormal } from './bounceUtils';
+import { determineWallNormal, calculateEnemyReflectionNormal } from './bounceUtils';
 import {
   TILE_SIZE,
   GRID_COLS,
   GRID_ROWS,
   BOUNCE_OFFSET,
+  ENEMY_BOUNCE_MARGIN,
 } from './constants';
 
 export class BulletManager {
@@ -111,23 +112,35 @@ export class BulletManager {
       if (this.enemyManager) {
         const damage = this.playerStats.attackPower * this.playerStats.multiWayShotDamageMultiplier;
         const bulletRadius = this.playerStats.bulletSize / 2;
-        const hitEnemyId = this.enemyManager.damageEnemyAt(
+        const hitResult = this.enemyManager.damageEnemyAt(
           bullet.x,
           bullet.y,
           bulletRadius,
           damage,
           bullet.getHitEnemies()
         );
-        if (hitEnemyId) {
+        if (hitResult) {
           // Record this enemy as hit to prevent double damage
-          bullet.recordEnemyHit(hitEnemyId);
+          bullet.recordEnemyHit(hitResult.id);
 
-          // Check if bullet can pierce through
+          // Check if bullet can pierce through (pierce takes priority over bounce)
           if (bullet.canPierceEnemy) {
             bullet.pierceEnemyRemaining--;
             // Bullet continues through enemy
+          } else if (bullet.hasBounce) {
+            // No pierce remaining - check for bounce
+            const normal = calculateEnemyReflectionNormal(
+              bullet.x,
+              bullet.y,
+              hitResult.x,
+              hitResult.y
+            );
+            bullet.applyBounce(normal);
+
+            // Offset bullet position to prevent re-collision with enemy
+            this.offsetBulletFromEnemy(bullet, hitResult.x, hitResult.y, normal, hitResult.radius);
           } else {
-            // No pierce remaining - remove bullet
+            // No pierce and no bounce - remove bullet
             this.removeBullet(i);
             continue;
           }
@@ -271,6 +284,28 @@ export class BulletManager {
         newY = (gridY + 1) * TILE_SIZE + BOUNCE_OFFSET;
       }
     }
+
+    bullet.setPosition(newX, newY);
+  }
+
+  /**
+   * Offset bullet position away from enemy to prevent immediate re-collision.
+   * Uses the normal direction to push bullet away from enemy center.
+   * Accounts for enemy radius plus bullet size to ensure proper separation.
+   */
+  private offsetBulletFromEnemy(
+    bullet: Bullet,
+    enemyX: number,
+    enemyY: number,
+    normal: { x: number; y: number },
+    enemyRadius: number
+  ): void {
+    // Offset bullet outside enemy collision area + margin
+    // Distance = enemy radius + bullet radius + extra margin
+    const offsetDistance = enemyRadius + this.playerStats.bulletSize / 2 + ENEMY_BOUNCE_MARGIN;
+
+    const newX = enemyX + normal.x * offsetDistance;
+    const newY = enemyY + normal.y * offsetDistance;
 
     bullet.setPosition(newX, newY);
   }
