@@ -9,6 +9,7 @@ import {
   TILE_SIZE,
   FloorSizeConfig,
   DEFAULT_FLOOR_SIZE_CONFIG,
+  PLAYER_SPAWN_RADIUS,
 } from './constants';
 
 interface GridDimensions {
@@ -36,6 +37,7 @@ export class FloorManager {
   private cachedDistribution: HPDistributionEntry[] | null = null;
   private cachedDistributionFloor: number = -1;
   private readonly floorSizeConfig: FloorSizeConfig;
+  private cachedSpawnCenter: GridPosition | null = null;
 
   constructor(floorSizeConfig?: FloorSizeConfig) {
     this.floorSizeConfig = floorSizeConfig
@@ -50,16 +52,22 @@ export class FloorManager {
   nextFloor(): void {
     this._currentFloor++;
     this.clearDistributionCache();
+    this.clearSpawnCenterCache();
   }
 
   reset(): void {
     this._currentFloor = 1;
     this.clearDistributionCache();
+    this.clearSpawnCenterCache();
   }
 
   private clearDistributionCache(): void {
     this.cachedDistribution = null;
     this.cachedDistributionFloor = -1;
+  }
+
+  private clearSpawnCenterCache(): void {
+    this.cachedSpawnCenter = null;
   }
 
   // Scaled enemy HP for current floor
@@ -212,5 +220,48 @@ export class FloorManager {
       x: Math.floor(cols / 2),
       y: Math.floor(rows / 2),
     };
+  }
+
+  // Get random spawn center position (grid coordinates) for current floor
+  // The position must allow a 3x3 safe zone to fit within the playable area
+  // (i.e., not overlapping outer walls at indices 0 and cols-1/rows-1)
+  //
+  // IMPORTANT: This method caches the spawn center for the current floor.
+  // This ensures that WallManager, Player, and OxygenTankManager all use
+  // the same spawn center during floor initialization.
+  // The cache is cleared on floor transitions (nextFloor, reset).
+  getRandomSpawnCenter(): GridPosition {
+    // Return cached spawn center if available
+    if (this.cachedSpawnCenter !== null) {
+      return { ...this.cachedSpawnCenter };
+    }
+
+    const { cols, rows } = this.getFloorGridDimensions();
+
+    // Calculate valid spawn range
+    // Outer walls are at indices 0 and cols-1/rows-1
+    // Safe zone is 3x3 (PLAYER_SPAWN_RADIUS = 1 means 1 tile in each direction)
+    // So spawn center must be at least (1 + PLAYER_SPAWN_RADIUS) from outer walls
+    const minX = 1 + PLAYER_SPAWN_RADIUS;
+    const minY = 1 + PLAYER_SPAWN_RADIUS;
+    const maxX = cols - 2 - PLAYER_SPAWN_RADIUS;
+    const maxY = rows - 2 - PLAYER_SPAWN_RADIUS;
+
+    // If the floor is too small, clamp to valid range
+    // (In minimum case, minX == maxX and minY == maxY, giving only one valid position)
+    const clampedMaxX = Math.max(minX, maxX);
+    const clampedMaxY = Math.max(minY, maxY);
+
+    // Generate random position within valid range
+    const rangeX = clampedMaxX - minX + 1;
+    const rangeY = clampedMaxY - minY + 1;
+
+    const x = minX + Math.floor(Math.random() * rangeX);
+    const y = minY + Math.floor(Math.random() * rangeY);
+
+    // Cache the spawn center for this floor
+    this.cachedSpawnCenter = { x, y };
+
+    return { ...this.cachedSpawnCenter };
   }
 }

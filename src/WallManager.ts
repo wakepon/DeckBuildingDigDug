@@ -71,7 +71,7 @@ export class WallManager {
 
   private calculateSpawnCenter(): { x: number; y: number } {
     if (this.floorManager) {
-      return this.floorManager.getFloorSpawnCenter();
+      return this.floorManager.getRandomSpawnCenter();
     }
     // Fallback to center of max grid
     return {

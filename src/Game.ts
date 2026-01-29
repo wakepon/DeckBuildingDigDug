@@ -92,8 +92,8 @@ export class Game {
     const stairsPos = this.wallManager.stairsPosition;
     this.stairs = new Stairs(stairsPos.x, stairsPos.y);
 
-    // Get dynamic spawn center from floor manager
-    const spawnCenter = this.floorManager.getFloorSpawnCenter();
+    // Get random spawn center from floor manager
+    const spawnCenter = this.floorManager.getRandomSpawnCenter();
 
     // Initialize player with stats and spawn center
     this.player = new Player(
@@ -405,8 +405,8 @@ export class Game {
     // Add stairs after walls but before other objects (index 3: after floor, enemies, walls)
     this.gameContainer.addChildAt(this.stairs.graphics, 3);
 
-    // Get dynamic spawn center from floor manager
-    const spawnCenter = this.floorManager.getFloorSpawnCenter();
+    // Get random spawn center from floor manager
+    const spawnCenter = this.floorManager.getRandomSpawnCenter();
 
     // Reset player position to spawn area (centered in tile)
     this.player.resetPosition(

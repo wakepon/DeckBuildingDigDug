@@ -50,12 +50,16 @@ describe('WallManager Dynamic Floor Size', () => {
       expect(gridDims.rows).toBeLessThanOrEqual(GRID_ROWS);
     });
 
-    it('should spawn player at center of floor grid', () => {
-      const center = floorManager.getFloorSpawnCenter();
+    it('should spawn player at valid random position within floor grid', () => {
+      const gridDims = floorManager.getFloorGridDimensions();
       const spawnArea = wallManager.getSpawnArea();
 
-      expect(spawnArea.centerX).toBe(center.x);
-      expect(spawnArea.centerY).toBe(center.y);
+      // Random spawn position should be within valid bounds
+      // (not on outer walls and safe zone fits within playable area)
+      expect(spawnArea.centerX).toBeGreaterThan(0);
+      expect(spawnArea.centerX).toBeLessThan(gridDims.cols - 1);
+      expect(spawnArea.centerY).toBeGreaterThan(0);
+      expect(spawnArea.centerY).toBeLessThan(gridDims.rows - 1);
     });
   });
 
