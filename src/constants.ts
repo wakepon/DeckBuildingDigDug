@@ -134,12 +134,84 @@ export const FLOOR_GEM_EXP_SCALE = 0.3; // +30% exp per floor
 // Floor size scaling constants
 // Floors start smaller and grow larger as player progresses
 export const FLOOR_SIZE_SCALING = {
-  BASE_COLS: 16,             // Starting grid columns on floor 1
-  BASE_ROWS: 11,             // Starting grid rows on floor 1
-  COLS_PER_FLOOR: 24 / 9,    // Additional columns per floor (reaches 40 by floor 10)
-  ROWS_PER_FLOOR: 19 / 9,    // Additional rows per floor (reaches 30 by floor 10)
+  BASE_COLS: 13,             // Starting grid columns on floor 1
+  BASE_ROWS: 9,              // Starting grid rows on floor 1
+  COLS_PER_FLOOR: 27 / 9,    // Additional columns per floor (reaches 40 by floor 10)
+  ROWS_PER_FLOOR: 21 / 9,    // Additional rows per floor (reaches 30 by floor 10)
   MAX_FLOOR_FOR_SCALING: 10, // Floor at which max size is reached
 };
+
+// FloorSizeConfig interface for configurable floor sizing
+export interface FloorSizeConfig {
+  readonly baseCols: number;          // Starting grid columns on floor 1
+  readonly baseRows: number;          // Starting grid rows on floor 1
+  readonly maxCols: number;           // Maximum grid columns
+  readonly maxRows: number;           // Maximum grid rows
+  readonly colsPerFloor: number;      // Additional columns per floor
+  readonly rowsPerFloor: number;      // Additional rows per floor
+  readonly maxFloorForScaling: number; // Floor at which max size is reached
+}
+
+// Default floor size configuration (matches FLOOR_SIZE_SCALING behavior)
+export const DEFAULT_FLOOR_SIZE_CONFIG: FloorSizeConfig = {
+  baseCols: FLOOR_SIZE_SCALING.BASE_COLS,
+  baseRows: FLOOR_SIZE_SCALING.BASE_ROWS,
+  maxCols: GRID_COLS,
+  maxRows: GRID_ROWS,
+  colsPerFloor: FLOOR_SIZE_SCALING.COLS_PER_FLOOR,
+  rowsPerFloor: FLOOR_SIZE_SCALING.ROWS_PER_FLOOR,
+  maxFloorForScaling: FLOOR_SIZE_SCALING.MAX_FLOOR_FOR_SCALING,
+};
+
+// Validate a FloorSizeConfig
+export function validateFloorSizeConfig(config: FloorSizeConfig): boolean {
+  if (config.baseCols <= 0) {
+    throw new Error('baseCols must be positive');
+  }
+  if (config.baseRows <= 0) {
+    throw new Error('baseRows must be positive');
+  }
+  if (config.maxCols <= 0) {
+    throw new Error('maxCols must be positive');
+  }
+  if (config.maxRows <= 0) {
+    throw new Error('maxRows must be positive');
+  }
+  if (config.colsPerFloor < 0) {
+    throw new Error('colsPerFloor must be non-negative');
+  }
+  if (config.rowsPerFloor < 0) {
+    throw new Error('rowsPerFloor must be non-negative');
+  }
+  if (config.maxFloorForScaling <= 0) {
+    throw new Error('maxFloorForScaling must be positive');
+  }
+  if (!Number.isInteger(config.maxFloorForScaling)) {
+    throw new Error('maxFloorForScaling must be an integer');
+  }
+  if (config.baseCols > config.maxCols) {
+    throw new Error('baseCols cannot exceed maxCols');
+  }
+  if (config.baseRows > config.maxRows) {
+    throw new Error('baseRows cannot exceed maxRows');
+  }
+
+  return true;
+}
+
+// Factory function to create FloorSizeConfig with defaults
+export function createFloorSizeConfig(
+  overrides?: Partial<FloorSizeConfig>
+): FloorSizeConfig {
+  const config: FloorSizeConfig = {
+    ...DEFAULT_FLOOR_SIZE_CONFIG,
+    ...overrides,
+  };
+
+  validateFloorSizeConfig(config);
+
+  return config;
+}
 
 // Level-up settings
 export const EXP_PER_LEVEL_BASE = 10; // Required EXP = 10 × level

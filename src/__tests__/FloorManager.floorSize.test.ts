@@ -35,9 +35,9 @@ describe('FloorManager Dynamic Floor Size', () => {
       it('should return dimensions large enough for gameplay', () => {
         const dimensions = floorManager.getFloorGridDimensions();
 
-        // Minimum playable area: at least 15x11 (matches FLOOR_SIZE_SCALING.BASE_COLS/BASE_ROWS)
-        expect(dimensions.cols).toBeGreaterThanOrEqual(15);
-        expect(dimensions.rows).toBeGreaterThanOrEqual(11);
+        // Minimum playable area: at least 13x9 (matches FLOOR_SIZE_SCALING.BASE_COLS/BASE_ROWS)
+        expect(dimensions.cols).toBeGreaterThanOrEqual(13);
+        expect(dimensions.rows).toBeGreaterThanOrEqual(9);
       });
     });
 
