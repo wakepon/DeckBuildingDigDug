@@ -4,6 +4,7 @@ import { EliteEnemy } from './EliteEnemy';
 import { TreasureChest } from './TreasureChest';
 import { getDistance } from './utils/math';
 import { EventBus } from './EventBus';
+import { DebugDisplayManager } from './DebugDisplayManager';
 import {
   ENEMY_SIZE,
   PLAYER_SIZE,
@@ -25,6 +26,7 @@ import {
 
 export class EnemyManager {
   public container: Container;
+  private hpTextContainer: Container;
   private enemies: Enemy[] = [];
   private eliteEnemies: EliteEnemy[] = [];
   private treasureChests: TreasureChest[] = [];
@@ -37,10 +39,20 @@ export class EnemyManager {
   private eliteSpawnedThisFloor: number = 0;
   private worldWidth: number = WORLD_WIDTH;
   private worldHeight: number = WORLD_HEIGHT;
+  private debugDisplayManager: DebugDisplayManager | null = null;
 
   constructor(eventBus: EventBus) {
     this.container = new Container();
+    this.hpTextContainer = new Container();
+    this.container.addChild(this.hpTextContainer);
     this.eventBus = eventBus;
+  }
+
+  /**
+   * Get the HP text container for adding to scene
+   */
+  getHPTextContainer(): Container {
+    return this.hpTextContainer;
   }
 
   setEnemyHP(hp: number): void {
@@ -54,6 +66,51 @@ export class EnemyManager {
   setWorldSize(width: number, height: number): void {
     this.worldWidth = width;
     this.worldHeight = height;
+  }
+
+  /**
+   * Set the DebugDisplayManager for all enemies
+   */
+  setDebugDisplayManager(manager: DebugDisplayManager): void {
+    this.debugDisplayManager = manager;
+    // Set for all existing enemies
+    for (const enemy of this.enemies) {
+      enemy.setDebugDisplayManager(manager);
+    }
+    for (const elite of this.eliteEnemies) {
+      elite.setDebugDisplayManager(manager);
+    }
+    // Listen for state changes to update HP text visibility
+    manager.onStateChange(() => {
+      this.updateAllEnemyHPTexts();
+    });
+    // Initial update
+    this.updateAllEnemyHPTexts();
+  }
+
+  /**
+   * Update HP text visibility for all enemies
+   */
+  private updateAllEnemyHPTexts(): void {
+    // Clear existing HP texts from container
+    this.hpTextContainer.removeChildren();
+
+    // Add HP texts for enemies that should show them
+    const shouldShow = this.debugDisplayManager?.getState().showEnemyHP ?? false;
+    if (shouldShow) {
+      for (const enemy of this.enemies) {
+        const hpText = enemy.getHPTextElement();
+        if (hpText) {
+          this.hpTextContainer.addChild(hpText);
+        }
+      }
+      for (const elite of this.eliteEnemies) {
+        const hpText = elite.getHPTextElement();
+        if (hpText) {
+          this.hpTextContainer.addChild(hpText);
+        }
+      }
+    }
   }
 
   onWallDestroyed(x: number, y: number): void {
@@ -135,12 +192,28 @@ export class EnemyManager {
 
   spawnEnemy(x: number, y: number): void {
     const enemy = new Enemy(x, y, this.enemyHP);
+    if (this.debugDisplayManager) {
+      enemy.setDebugDisplayManager(this.debugDisplayManager);
+      // Add HP text to container if it exists
+      const hpText = enemy.getHPTextElement();
+      if (hpText && this.debugDisplayManager.getState().showEnemyHP) {
+        this.hpTextContainer.addChild(hpText);
+      }
+    }
     this.enemies.push(enemy);
     this.container.addChild(enemy.graphics);
   }
 
   spawnEliteEnemy(x: number, y: number): void {
     const elite = new EliteEnemy(x, y, this.enemyHP);
+    if (this.debugDisplayManager) {
+      elite.setDebugDisplayManager(this.debugDisplayManager);
+      // Add HP text to container if it exists
+      const hpText = elite.getHPTextElement();
+      if (hpText && this.debugDisplayManager.getState().showEnemyHP) {
+        this.hpTextContainer.addChild(hpText);
+      }
+    }
     this.eliteEnemies.push(elite);
     this.container.addChild(elite.graphics);
   }

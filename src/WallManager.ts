@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Text } from 'pixi.js';
 import {
   GRID_COLS,
   GRID_ROWS,
@@ -9,8 +9,11 @@ import {
   STAIRS_MIN_DISTANCE,
   OUTER_WALL_HP,
   OUTER_WALL_COLOR,
+  DEBUG_DISPLAY_TEXT_STYLE,
+  DEBUG_DISPLAY_HP_COLORS,
 } from './constants';
 import { FloorManager } from './FloorManager';
+import { DebugDisplayManager } from './DebugDisplayManager';
 
 interface Wall {
   hp: number;
@@ -35,6 +38,7 @@ interface SpawnArea {
 
 export class WallManager {
   public container: Container;
+  public hpTextContainer: Container;
   private walls: (Wall | null)[][];
   private _stairsPosition: { x: number; y: number } = { x: 0, y: 0 };
   private floorManager: FloorManager | null = null;
@@ -42,9 +46,13 @@ export class WallManager {
   private _currentGridRows: number;
   private _spawnCenterX: number;
   private _spawnCenterY: number;
+  private debugDisplayManager: DebugDisplayManager | null = null;
+  private hpTexts: (Text | null)[][] = [];
+  private _isHPTextVisible: boolean = false;
 
   constructor(floorManager?: FloorManager) {
     this.container = new Container();
+    this.hpTextContainer = new Container();
     this.walls = [];
     this.floorManager = floorManager || null;
 
@@ -278,7 +286,7 @@ export class WallManager {
   }
 
   public update(): void {
-    // Future: Add wall animations, effects, etc.
+    this.updateHPDisplay();
   }
 
   private generateWallHP(): number {
@@ -344,5 +352,137 @@ export class WallManager {
       centerY: this._spawnCenterY,
       radius: PLAYER_SPAWN_RADIUS,
     };
+  }
+
+  /**
+   * Set the DebugDisplayManager for controlling HP overlay visibility
+   */
+  public setDebugDisplayManager(manager: DebugDisplayManager): void {
+    this.debugDisplayManager = manager;
+  }
+
+  /**
+   * Get the current DebugDisplayManager instance
+   */
+  public getDebugDisplayManager(): DebugDisplayManager | null {
+    return this.debugDisplayManager;
+  }
+
+  /**
+   * Update HP display text based on debug display state
+   */
+  private updateHPDisplay(): void {
+    const shouldShow = this.debugDisplayManager?.getState().showBlockHP ?? false;
+
+    if (shouldShow && !this._isHPTextVisible) {
+      // Create HP text elements for all walls
+      this.createHPTexts();
+      this._isHPTextVisible = true;
+    } else if (!shouldShow && this._isHPTextVisible) {
+      // Hide all HP text elements
+      this.clearHPTexts();
+      this._isHPTextVisible = false;
+    } else if (shouldShow) {
+      // Update HP text content
+      this.updateHPTexts();
+    }
+  }
+
+  /**
+   * Create a single HP text element for a wall
+   */
+  private createHPTextElement(hp: number, x: number, y: number): Text {
+    const hpText = new Text({
+      text: String(hp),
+      style: {
+        fontFamily: DEBUG_DISPLAY_TEXT_STYLE.fontFamily,
+        fontSize: DEBUG_DISPLAY_TEXT_STYLE.fontSize,
+        fontWeight: DEBUG_DISPLAY_TEXT_STYLE.fontWeight,
+        fill: DEBUG_DISPLAY_HP_COLORS.blockHP,
+        stroke: {
+          color: DEBUG_DISPLAY_TEXT_STYLE.stroke,
+          width: DEBUG_DISPLAY_TEXT_STYLE.strokeThickness,
+        },
+      },
+    });
+    hpText.anchor.set(0.5, 0.5);
+    hpText.x = (x + 0.5) * TILE_SIZE;
+    hpText.y = (y + 0.5) * TILE_SIZE;
+    return hpText;
+  }
+
+  /**
+   * Create HP text elements for all walls
+   */
+  private createHPTexts(): void {
+    for (let y = 0; y < this._currentGridRows; y++) {
+      if (!this.hpTexts[y]) {
+        this.hpTexts[y] = [];
+      }
+      for (let x = 0; x < this._currentGridCols; x++) {
+        const wall = this.walls[y]?.[x];
+        if (wall && wall.hp !== OUTER_WALL_HP) {
+          const hpText = this.createHPTextElement(wall.hp, x, y);
+          this.hpTexts[y][x] = hpText;
+          this.hpTextContainer.addChild(hpText);
+        } else {
+          this.hpTexts[y][x] = null;
+        }
+      }
+    }
+  }
+
+  /**
+   * Update HP text content for all walls
+   */
+  private updateHPTexts(): void {
+    for (let y = 0; y < this._currentGridRows; y++) {
+      for (let x = 0; x < this._currentGridCols; x++) {
+        const wall = this.walls[y]?.[x];
+        const hpText = this.hpTexts[y]?.[x];
+
+        if (wall && wall.hp !== OUTER_WALL_HP) {
+          if (hpText) {
+            hpText.text = String(wall.hp);
+          } else {
+            // Create new text if wall exists but text doesn't
+            const newHpText = this.createHPTextElement(wall.hp, x, y);
+            if (!this.hpTexts[y]) {
+              this.hpTexts[y] = [];
+            }
+            this.hpTexts[y][x] = newHpText;
+            this.hpTextContainer.addChild(newHpText);
+          }
+        } else if (hpText) {
+          // Wall was destroyed, remove text
+          this.hpTextContainer.removeChild(hpText);
+          hpText.destroy();
+          this.hpTexts[y][x] = null;
+        }
+      }
+    }
+  }
+
+  /**
+   * Clear all HP text elements
+   */
+  private clearHPTexts(): void {
+    for (let y = 0; y < this.hpTexts.length; y++) {
+      for (let x = 0; x < (this.hpTexts[y]?.length ?? 0); x++) {
+        const hpText = this.hpTexts[y]?.[x];
+        if (hpText) {
+          this.hpTextContainer.removeChild(hpText);
+          hpText.destroy();
+        }
+      }
+    }
+    this.hpTexts = [];
+  }
+
+  /**
+   * Check if HP text is currently visible
+   */
+  public isHPTextVisible(): boolean {
+    return this._isHPTextVisible;
   }
 }

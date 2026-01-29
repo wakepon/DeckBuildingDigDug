@@ -23,6 +23,7 @@ import { DebugWindow } from './DebugWindow';
 import { AutoAimSystem } from './AutoAimSystem';
 import { Crosshair } from './Crosshair';
 import { FloorRenderer } from './FloorRenderer';
+import { DebugDisplayManager } from './DebugDisplayManager';
 
 export class Game {
   private app: Application;
@@ -50,6 +51,7 @@ export class Game {
   private crosshair!: Crosshair;
   private camera!: Camera;
   private floorRenderer!: FloorRenderer;
+  private debugDisplayManager!: DebugDisplayManager;
   private isTransitioning: boolean = false;
   private isPaused: boolean = false;
 
@@ -144,13 +146,26 @@ export class Game {
     // Initialize stats display
     this.statsDisplay = new StatsDisplay(this.playerStats);
 
+    // Initialize debug display manager (centralized debug overlay state)
+    this.debugDisplayManager = new DebugDisplayManager();
+
     // Initialize debug window
     this.debugWindow = new DebugWindow(this.playerStats);
+    this.debugWindow.setDebugDisplayManager(this.debugDisplayManager);
 
     // Debug window stats changed callback
     this.debugWindow.setOnStatsChanged(() => {
       this.statsDisplay.updateDisplay();
     });
+
+    // Wire debug display manager to wall manager
+    this.wallManager.setDebugDisplayManager(this.debugDisplayManager);
+
+    // Wire debug display manager to enemy manager
+    this.enemyManager.setDebugDisplayManager(this.debugDisplayManager);
+
+    // Wire debug display manager to bullet manager
+    this.bulletManager.setDebugDisplayManager(this.debugDisplayManager);
 
     // Initialize auto-aim system
     this.autoAimSystem = new AutoAimSystem();
@@ -189,6 +204,8 @@ export class Game {
     // Enemies are drawn below walls so they're hidden behind walls
     this.gameContainer.addChild(this.enemyManager.container);
     this.gameContainer.addChild(this.wallManager.container);
+    // Wall HP text container (debug display) on top of walls
+    this.gameContainer.addChild(this.wallManager.hpTextContainer);
     this.gameContainer.addChild(this.stairs.graphics);
     this.gameContainer.addChild(this.oxygenTankManager.container);
     this.gameContainer.addChild(this.gemManager.container);

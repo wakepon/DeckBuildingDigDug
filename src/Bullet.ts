@@ -1,6 +1,14 @@
-import { Graphics } from 'pixi.js';
-import { BULLET_SIZE, BULLET_COLOR, BULLET_SPEED } from './constants';
+import { Graphics, Text } from 'pixi.js';
+import {
+  BULLET_SIZE,
+  BULLET_COLOR,
+  BULLET_SPEED,
+  DEBUG_DISPLAY_TEXT_STYLE,
+  DEBUG_DISPLAY_HP_COLORS,
+  DEBUG_DISPLAY_TEXT_OFFSET,
+} from './constants';
 import { calculateReflectionVector, type Vector2D } from './bounceUtils';
+import { DebugDisplayManager } from './DebugDisplayManager';
 
 export class Bullet {
   public graphics: Graphics;
@@ -14,6 +22,9 @@ export class Bullet {
   private _pierceEnemyRemaining: number;
   private size: number;
   private hitEnemies: Set<string> = new Set();
+  private debugDisplayManager: DebugDisplayManager | null = null;
+  private _damage: number = 0;
+  private damageText: Text | null = null;
 
   constructor(
     x: number,
@@ -23,7 +34,8 @@ export class Bullet {
     size: number = BULLET_SIZE,
     penetration: number = 0,
     bounce: number = 0,
-    pierceEnemy: number = 0
+    pierceEnemy: number = 0,
+    damage: number = 0
   ) {
     this.x = x;
     this.y = y;
@@ -31,6 +43,7 @@ export class Bullet {
     this.penetrationRemaining = penetration;
     this._bounceRemaining = bounce;
     this._pierceEnemyRemaining = pierceEnemy;
+    this._damage = damage;
 
     // Normalize direction and apply speed
     const length = Math.sqrt(dirX * dirX + dirY * dirY);
@@ -159,10 +172,89 @@ export class Bullet {
     this.x += this.vx * deltaTime;
     this.y += this.vy * deltaTime;
     this.updatePosition();
+    this.updateDamageDisplay();
   }
 
   destroy(): void {
     this.active = false;
+    if (this.damageText) {
+      this.damageText.destroy();
+      this.damageText = null;
+    }
     this.graphics.destroy();
+  }
+
+  /**
+   * Set the DebugDisplayManager for controlling damage overlay visibility
+   */
+  setDebugDisplayManager(manager: DebugDisplayManager): void {
+    this.debugDisplayManager = manager;
+  }
+
+  /**
+   * Set the damage value for display
+   */
+  setDamage(damage: number): void {
+    this._damage = damage;
+  }
+
+  /**
+   * Get the current damage value
+   */
+  getDamage(): number {
+    return this._damage;
+  }
+
+  /**
+   * Update damage display text based on debug display state
+   */
+  private updateDamageDisplay(): void {
+    const shouldShow = this.debugDisplayManager?.getState().showBulletDamage ?? false;
+
+    if (shouldShow) {
+      if (!this.damageText) {
+        this.damageText = new Text({
+          text: String(this._damage),
+          style: {
+            fontFamily: DEBUG_DISPLAY_TEXT_STYLE.fontFamily,
+            fontSize: DEBUG_DISPLAY_TEXT_STYLE.fontSize,
+            fontWeight: DEBUG_DISPLAY_TEXT_STYLE.fontWeight,
+            fill: DEBUG_DISPLAY_HP_COLORS.bulletDamage,
+            stroke: {
+              color: DEBUG_DISPLAY_TEXT_STYLE.stroke,
+              width: DEBUG_DISPLAY_TEXT_STYLE.strokeThickness,
+            },
+          },
+        });
+        this.damageText.anchor.set(0.5, 0.5);
+      }
+      this.damageText.text = String(this._damage);
+      this.damageText.x = this.x;
+      this.damageText.y = this.y - this.size - DEBUG_DISPLAY_TEXT_OFFSET.bulletDamage;
+      this.damageText.visible = true;
+    } else if (this.damageText) {
+      this.damageText.visible = false;
+    }
+  }
+
+  /**
+   * Check if damage text is currently visible
+   */
+  isDamageTextVisible(): boolean {
+    return this.damageText?.visible ?? false;
+  }
+
+  /**
+   * Get the current damage text content
+   */
+  getDamageText(): string {
+    return this.damageText?.text ?? '';
+  }
+
+  /**
+   * Get the damage text element (for adding to scene)
+   */
+  getDamageTextElement(): Text | null {
+    return this.damageText;
   }
 }

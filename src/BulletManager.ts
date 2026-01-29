@@ -9,6 +9,7 @@ import { EventBus } from './EventBus';
 import { AutoAimSystem, Target, TargetType } from './AutoAimSystem';
 import { calculateMultiWayShotDirections } from './multiWayShotUtils';
 import { determineWallNormal, calculateEnemyReflectionNormal } from './bounceUtils';
+import { DebugDisplayManager } from './DebugDisplayManager';
 import {
   TILE_SIZE,
   GRID_COLS,
@@ -19,6 +20,7 @@ import {
 
 export class BulletManager {
   public container: Container;
+  private damageTextContainer: Container;
   private bullets: Bullet[] = [];
   private wallManager: WallManager;
   private inputManager: InputManager;
@@ -30,6 +32,7 @@ export class BulletManager {
   private fireCooldown: number = 0;
   private worldWidth: number = GRID_COLS * TILE_SIZE;
   private worldHeight: number = GRID_ROWS * TILE_SIZE;
+  private debugDisplayManager: DebugDisplayManager | null = null;
 
   constructor(
     wallManager: WallManager,
@@ -44,6 +47,15 @@ export class BulletManager {
     this.playerStats = playerStats;
     this.eventBus = eventBus;
     this.container = new Container();
+    this.damageTextContainer = new Container();
+    this.container.addChild(this.damageTextContainer);
+  }
+
+  /**
+   * Get the damage text container for adding to scene
+   */
+  getDamageTextContainer(): Container {
+    return this.damageTextContainer;
   }
 
   setEnemyManager(enemyManager: EnemyManager): void {
@@ -61,6 +73,42 @@ export class BulletManager {
   setWorldSize(width: number, height: number): void {
     this.worldWidth = width;
     this.worldHeight = height;
+  }
+
+  /**
+   * Set the DebugDisplayManager for all bullets
+   */
+  setDebugDisplayManager(manager: DebugDisplayManager): void {
+    this.debugDisplayManager = manager;
+    // Set for all existing bullets
+    for (const bullet of this.bullets) {
+      bullet.setDebugDisplayManager(manager);
+    }
+    // Listen for state changes to update damage text visibility
+    manager.onStateChange(() => {
+      this.updateAllBulletDamageTexts();
+    });
+    // Initial update
+    this.updateAllBulletDamageTexts();
+  }
+
+  /**
+   * Update damage text visibility for all bullets
+   */
+  private updateAllBulletDamageTexts(): void {
+    // Clear existing damage texts from container
+    this.damageTextContainer.removeChildren();
+
+    // Add damage texts for bullets that should show them
+    const shouldShow = this.debugDisplayManager?.getState().showBulletDamage ?? false;
+    if (shouldShow) {
+      for (const bullet of this.bullets) {
+        const damageText = bullet.getDamageTextElement();
+        if (damageText) {
+          this.damageTextContainer.addChild(damageText);
+        }
+      }
+    }
   }
 
   /**
@@ -362,6 +410,9 @@ export class BulletManager {
       this.playerStats.multiWayShotBulletCount
     );
 
+    // Calculate damage for bullets
+    const damage = this.playerStats.attackPower * this.playerStats.multiWayShotDamageMultiplier;
+
     // Create a bullet for each direction
     for (const direction of directions) {
       const bullet = new Bullet(
@@ -372,8 +423,17 @@ export class BulletManager {
         this.playerStats.bulletSize,
         this.playerStats.penetrationCount,
         this.playerStats.bounceCount,
-        this.playerStats.pierceEnemyCount
+        this.playerStats.pierceEnemyCount,
+        damage
       );
+      if (this.debugDisplayManager) {
+        bullet.setDebugDisplayManager(this.debugDisplayManager);
+        // Add damage text to container if it exists
+        const damageText = bullet.getDamageTextElement();
+        if (damageText && this.debugDisplayManager.getState().showBulletDamage) {
+          this.damageTextContainer.addChild(damageText);
+        }
+      }
       this.bullets.push(bullet);
       this.container.addChild(bullet.graphics);
     }

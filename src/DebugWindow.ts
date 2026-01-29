@@ -1,6 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './constants';
 import { PlayerStats, UpgradeType, UPGRADE_DATA } from './PlayerStats';
+import { DebugDisplayManager } from './DebugDisplayManager';
 
 export class DebugWindow {
   public container: Container;
@@ -10,13 +11,16 @@ export class DebugWindow {
   private upgradeRows: Container[] = [];
   private _isVisible: boolean = false;
   private onStatsChangedCallback: (() => void) | null = null;
+  private debugDisplayManager: DebugDisplayManager | null = null;
+  private displayToggleButtons: Map<string, { button: Container; indicator: Graphics }> = new Map();
 
   // Layout constants
   private readonly WINDOW_WIDTH = 320;
-  private readonly WINDOW_HEIGHT = 340;
+  private readonly WINDOW_HEIGHT = 440;
   private readonly ROW_HEIGHT = 30;
   private readonly PADDING = 15;
   private readonly BUTTON_SIZE = 24;
+  private readonly TOGGLE_SIZE = 20;
 
   constructor(playerStats: PlayerStats) {
     this.playerStats = playerStats;
@@ -55,6 +59,9 @@ export class DebugWindow {
 
     // Create rows for each upgrade type
     this.createUpgradeRows();
+
+    // Create display options section
+    this.createDisplayOptions();
   }
 
   private createUpgradeRows(): void {
@@ -66,6 +73,124 @@ export class DebugWindow {
       const row = this.createUpgradeRow(type, startY + i * this.ROW_HEIGHT);
       this.upgradeRows.push(row);
       this.container.addChild(row);
+    }
+  }
+
+  private createDisplayOptions(): void {
+    const allTypes = this.getAllUpgradeTypes();
+    const startY = 45 + allTypes.length * this.ROW_HEIGHT + 20;
+
+    // Separator line
+    const separator = new Graphics();
+    separator.rect(this.PADDING, startY, this.WINDOW_WIDTH - 2 * this.PADDING, 1);
+    separator.fill({ color: 0x444444 });
+    this.container.addChild(separator);
+
+    // Section header
+    const headerText = new Text({
+      text: 'Display Options',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 14,
+        fontWeight: 'bold',
+        fill: 0xaaaaaa,
+      },
+    });
+    headerText.x = this.PADDING;
+    headerText.y = startY + 10;
+    this.container.addChild(headerText);
+
+    // Create toggle rows
+    const toggleStartY = startY + 40;
+    this.createToggleRow('Block HP', 'blockHP', toggleStartY, () => this.toggleBlockHPDisplay());
+    this.createToggleRow('Enemy HP', 'enemyHP', toggleStartY + 30, () => this.toggleEnemyHPDisplay());
+    this.createToggleRow('Bullet Damage', 'bulletDamage', toggleStartY + 60, () => this.toggleBulletDamageDisplay());
+  }
+
+  private createToggleRow(label: string, key: string, y: number, onToggle: () => void): void {
+    const row = new Container();
+    row.y = y;
+
+    // Label text
+    const labelText = new Text({
+      text: label,
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 12,
+        fill: 0xffffff,
+      },
+    });
+    labelText.x = this.PADDING + 10;
+    labelText.y = 2;
+    row.addChild(labelText);
+
+    // Toggle button (checkbox style)
+    const toggleBtn = new Container();
+    toggleBtn.x = this.WINDOW_WIDTH - this.PADDING - this.TOGGLE_SIZE - 10;
+    toggleBtn.y = 0;
+
+    // Button background
+    const bg = new Graphics();
+    bg.roundRect(0, 0, this.TOGGLE_SIZE, this.TOGGLE_SIZE, 3);
+    bg.fill({ color: 0x333333 });
+    bg.roundRect(0, 0, this.TOGGLE_SIZE, this.TOGGLE_SIZE, 3);
+    bg.stroke({ width: 1, color: 0x666666 });
+    toggleBtn.addChild(bg);
+
+    // Toggle indicator (checkmark)
+    const indicator = new Graphics();
+    indicator.visible = false;
+    toggleBtn.addChild(indicator);
+    this.updateToggleIndicator(indicator, false);
+
+    // Make button interactive
+    toggleBtn.eventMode = 'static';
+    toggleBtn.cursor = 'pointer';
+    toggleBtn.on('pointerdown', () => {
+      onToggle();
+      this.updateDisplayToggles();
+    });
+
+    row.addChild(toggleBtn);
+    this.container.addChild(row);
+
+    // Store reference
+    this.displayToggleButtons.set(key, { button: toggleBtn, indicator });
+  }
+
+  private updateToggleIndicator(indicator: Graphics, isEnabled: boolean): void {
+    indicator.clear();
+    indicator.visible = isEnabled;
+
+    if (isEnabled) {
+      // Draw checkmark
+      indicator.moveTo(4, 10);
+      indicator.lineTo(8, 14);
+      indicator.lineTo(16, 6);
+      indicator.stroke({ width: 2, color: 0x44ff44 });
+    }
+  }
+
+  private updateDisplayToggles(): void {
+    if (!this.debugDisplayManager) {
+      return;
+    }
+
+    const state = this.debugDisplayManager.getState();
+
+    const blockHPToggle = this.displayToggleButtons.get('blockHP');
+    if (blockHPToggle) {
+      this.updateToggleIndicator(blockHPToggle.indicator, state.showBlockHP);
+    }
+
+    const enemyHPToggle = this.displayToggleButtons.get('enemyHP');
+    if (enemyHPToggle) {
+      this.updateToggleIndicator(enemyHPToggle.indicator, state.showEnemyHP);
+    }
+
+    const bulletDamageToggle = this.displayToggleButtons.get('bulletDamage');
+    if (bulletDamageToggle) {
+      this.updateToggleIndicator(bulletDamageToggle.indicator, state.showBulletDamage);
     }
   }
 
@@ -197,6 +322,7 @@ export class DebugWindow {
     this._isVisible = true;
     this.container.visible = true;
     this.updateDisplay();
+    this.updateDisplayToggles();
   }
 
   hide(): void {
@@ -269,5 +395,77 @@ export class DebugWindow {
 
     this.background.destroy();
     this.container.destroy({ children: true });
+  }
+
+  /**
+   * Set the DebugDisplayManager instance for controlling debug overlays
+   */
+  setDebugDisplayManager(manager: DebugDisplayManager): void {
+    this.debugDisplayManager = manager;
+    this.updateDisplayToggles();
+  }
+
+  /**
+   * Get the current DebugDisplayManager instance
+   */
+  getDebugDisplayManager(): DebugDisplayManager | null {
+    return this.debugDisplayManager;
+  }
+
+  /**
+   * Toggle block HP display visibility
+   */
+  toggleBlockHPDisplay(): void {
+    if (this.debugDisplayManager) {
+      this.debugDisplayManager.toggleBlockHP();
+    }
+  }
+
+  /**
+   * Toggle enemy HP display visibility
+   */
+  toggleEnemyHPDisplay(): void {
+    if (this.debugDisplayManager) {
+      this.debugDisplayManager.toggleEnemyHP();
+    }
+  }
+
+  /**
+   * Toggle bullet damage display visibility
+   */
+  toggleBulletDamageDisplay(): void {
+    if (this.debugDisplayManager) {
+      this.debugDisplayManager.toggleBulletDamage();
+    }
+  }
+
+  /**
+   * Check if block HP display is enabled
+   */
+  isBlockHPDisplayEnabled(): boolean {
+    if (!this.debugDisplayManager) {
+      return false;
+    }
+    return this.debugDisplayManager.getState().showBlockHP;
+  }
+
+  /**
+   * Check if enemy HP display is enabled
+   */
+  isEnemyHPDisplayEnabled(): boolean {
+    if (!this.debugDisplayManager) {
+      return false;
+    }
+    return this.debugDisplayManager.getState().showEnemyHP;
+  }
+
+  /**
+   * Check if bullet damage display is enabled
+   */
+  isBulletDamageDisplayEnabled(): boolean {
+    if (!this.debugDisplayManager) {
+      return false;
+    }
+    return this.debugDisplayManager.getState().showBulletDamage;
   }
 }

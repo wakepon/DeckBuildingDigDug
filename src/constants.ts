@@ -279,3 +279,25 @@ export const FLOOR_PATTERN = {
   COLOR_VARIATION: 0x080808,  // Amount of color variation per tile
   HIGHLIGHT_ALPHA: 0.3,       // Alpha for highlight edges
 };
+
+// Debug display text styling
+export const DEBUG_DISPLAY_TEXT_STYLE = {
+  fontFamily: 'Arial',
+  fontSize: 12,
+  fontWeight: 'bold' as const,
+  stroke: 0x000000,
+  strokeThickness: 2,
+};
+
+// Debug display colors for different HP types
+export const DEBUG_DISPLAY_HP_COLORS = {
+  blockHP: 0xffff00,      // Yellow for block HP
+  enemyHP: 0xff4444,      // Red for enemy HP
+  bulletDamage: 0x44ff44, // Green for bullet damage
+};
+
+// Debug display text positioning offsets
+export const DEBUG_DISPLAY_TEXT_OFFSET = {
+  enemyHP: 10,      // Offset above enemy radius
+  bulletDamage: 5,  // Offset above bullet size
+};

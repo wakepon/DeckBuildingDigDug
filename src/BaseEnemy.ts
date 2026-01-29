@@ -1,5 +1,7 @@
-import { Graphics } from 'pixi.js';
+import { Graphics, Text } from 'pixi.js';
 import { getDistance } from './utils/math';
+import { DebugDisplayManager } from './DebugDisplayManager';
+import { DEBUG_DISPLAY_TEXT_STYLE, DEBUG_DISPLAY_HP_COLORS, DEBUG_DISPLAY_TEXT_OFFSET } from './constants';
 
 /**
  * BaseEnemy - Abstract base class for all enemy types
@@ -17,6 +19,9 @@ export abstract class BaseEnemy {
   protected targetX: number = 0;
   protected targetY: number = 0;
   protected hitFlashTime: number = 0;
+
+  private debugDisplayManager: DebugDisplayManager | null = null;
+  private hpText: Text | null = null;
 
   constructor(x: number, y: number, hp: number) {
     this.id = `enemy-${BaseEnemy.nextId++}`;
@@ -80,6 +85,7 @@ export abstract class BaseEnemy {
 
     this.draw();
     this.updatePosition();
+    this.updateHPDisplay();
   }
 
   /**
@@ -101,6 +107,70 @@ export abstract class BaseEnemy {
    * Clean up graphics
    */
   destroy(): void {
+    if (this.hpText) {
+      this.hpText.destroy();
+      this.hpText = null;
+    }
     this.graphics.destroy();
+  }
+
+  /**
+   * Set the DebugDisplayManager for controlling HP overlay visibility
+   */
+  setDebugDisplayManager(manager: DebugDisplayManager): void {
+    this.debugDisplayManager = manager;
+  }
+
+  /**
+   * Update HP display text based on debug display state
+   */
+  private updateHPDisplay(): void {
+    const shouldShow = this.debugDisplayManager?.getState().showEnemyHP ?? false;
+
+    if (shouldShow) {
+      if (!this.hpText) {
+        this.hpText = new Text({
+          text: String(this.hp),
+          style: {
+            fontFamily: DEBUG_DISPLAY_TEXT_STYLE.fontFamily,
+            fontSize: DEBUG_DISPLAY_TEXT_STYLE.fontSize,
+            fontWeight: DEBUG_DISPLAY_TEXT_STYLE.fontWeight,
+            fill: DEBUG_DISPLAY_HP_COLORS.enemyHP,
+            stroke: {
+              color: DEBUG_DISPLAY_TEXT_STYLE.stroke,
+              width: DEBUG_DISPLAY_TEXT_STYLE.strokeThickness,
+            },
+          },
+        });
+        this.hpText.anchor.set(0.5, 0.5);
+      }
+      this.hpText.text = String(this.hp);
+      this.hpText.x = this.x;
+      this.hpText.y = this.y - this.radius - DEBUG_DISPLAY_TEXT_OFFSET.enemyHP;
+      this.hpText.visible = true;
+    } else if (this.hpText) {
+      this.hpText.visible = false;
+    }
+  }
+
+  /**
+   * Check if HP text is currently visible
+   */
+  isHPTextVisible(): boolean {
+    return this.hpText?.visible ?? false;
+  }
+
+  /**
+   * Get the current HP text content
+   */
+  getHPText(): string {
+    return this.hpText?.text ?? '';
+  }
+
+  /**
+   * Get the HP text element (for adding to scene)
+   */
+  getHPTextElement(): Text | null {
+    return this.hpText;
   }
 }
