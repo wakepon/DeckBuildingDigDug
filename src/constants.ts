@@ -4,8 +4,8 @@ export const SCREEN_HEIGHT = 600;
 
 // Grid settings
 export const TILE_SIZE = 40;
-export const GRID_COLS = 20;
-export const GRID_ROWS = 15;
+export const GRID_COLS = 40;
+export const GRID_ROWS = 30;
 
 // World dimensions (in pixels)
 export const WORLD_WIDTH = GRID_COLS * TILE_SIZE;

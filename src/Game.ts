@@ -1,6 +1,7 @@
 import { Application, Container } from 'pixi.js';
 import { EventBus } from './EventBus';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT, TILE_SIZE, PLAYER_SPAWN_CENTER_X, PLAYER_SPAWN_CENTER_Y, ELITE_COLOR } from './constants';
+import { Camera } from './Camera';
 import { WallManager } from './WallManager';
 import { InputManager } from './InputManager';
 import { Player } from './Player';
@@ -46,6 +47,7 @@ export class Game {
   private debugWindow!: DebugWindow;
   private autoAimSystem!: AutoAimSystem;
   private crosshair!: Crosshair;
+  private camera!: Camera;
   private isTransitioning: boolean = false;
   private isPaused: boolean = false;
 
@@ -146,6 +148,9 @@ export class Game {
 
     // Initialize Crosshair
     this.crosshair = new Crosshair(this.inputManager);
+
+    // Initialize Camera
+    this.camera = new Camera(SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT);
 
     // Connect managers
     this.bulletManager.setEnemyManager(this.enemyManager);
@@ -416,18 +421,10 @@ export class Game {
   }
 
   private updateCamera(): void {
-    // Center camera on player
-    const targetX = SCREEN_WIDTH / 2 - this.player.x;
-    const targetY = SCREEN_HEIGHT / 2 - this.player.y;
-
-    // Clamp camera to world bounds
-    const minX = SCREEN_WIDTH - WORLD_WIDTH;
-    const maxX = 0;
-    const minY = SCREEN_HEIGHT - WORLD_HEIGHT;
-    const maxY = 0;
-
-    this.gameContainer.x = Math.max(minX, Math.min(maxX, targetX));
-    this.gameContainer.y = Math.max(minY, Math.min(maxY, targetY));
+    // Use Camera class to follow player and clamp to world bounds
+    this.camera.follow(this.player.x, this.player.y);
+    this.gameContainer.x = this.camera.x;
+    this.gameContainer.y = this.camera.y;
   }
 
   get stage() {
